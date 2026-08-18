@@ -381,7 +381,11 @@
                     "iommu=pt"
                     "iommu.strict=1"
                   ]
-                  ++ lib.optional (vfioPciIds != [ ]) "vfio-pci.ids=${lib.concatStringsSep "," vfioPciIds}";
+                  ++ lib.optional (vfioPciIds != [ ]) "vfio-pci.ids=${lib.concatStringsSep "," vfioPciIds}"
+                  ++ lib.optionals rtxPassthrough [
+                    "pci=noaer"
+                    "pcie_port_pm=off"
+                  ];
                   blacklistedKernelModules =
                     [ "ast" ]
                     # NVIDIA's open driver supports the RTX PRO, not the GT 710.
@@ -563,6 +567,10 @@
                   ])
                   ++ lib.optionals vscodium (with pkgs; [ vscodium ])
                   ++ lib.optionals (!vm) (with pkgs; [ zfs ])
+                  ++ lib.optionals rtxPassthrough [
+                    # nvidia-smi + kernel module for GPU hardware reset before VM attach
+                    config.boot.kernelPackages.nvidiaPackages.production
+                  ]
                   ++ lib.optionals (!vm) (
                     with pkgs;
                     [
@@ -578,7 +586,8 @@
                 environment.sessionVariables = lib.optionalAttrs vscodium { NIXOS_OZONE_WL = "1"; };
                 environment.shellAliases = lib.optionalAttrs (!vm) {
                   mnt = "zpool import -a && zfs load-key -a && zfs mount -a";
-                  vm-up = "tmux new-session -s hermes 'bash /etc/tigor/vm.sh; exec bash'";
+                  vm-up = "tmux new-session -s hermes '/etc/tigor/vm.sh start; exec bash'";
+                  vm-stop = "/etc/tigor/vm.sh stop";
                   vm-attach = "tmux a -t hermes";
                 }
                 // lib.optionalAttrs (vm) {

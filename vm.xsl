@@ -67,9 +67,12 @@
         <xsl:if test="@gpu = 'true'">
           <hostdev mode="subsystem" type="pci" managed="yes">
             <source><address domain="0x0000" bus="0x41" slot="0x00" function="0x0"/></source>
+            <driver iommu="on"/>
+            <rom bar="on"/>
           </hostdev>
           <hostdev mode="subsystem" type="pci" managed="yes">
             <source><address domain="0x0000" bus="0x41" slot="0x00" function="0x1"/></source>
+            <driver iommu="on"/>
           </hostdev>
         </xsl:if>
         <audio id="1" type="none"/>
