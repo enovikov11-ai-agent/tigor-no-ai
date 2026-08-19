@@ -87,38 +87,29 @@ Editing chmod -x on all made vllm non executable and crashed inference and forge
 
 ## Ideas
 
-tigor-no-ai
-reject unverified
+sec&pub: .hermes publish
 
-.hermes sec edit & publish
-
-policy flags
-
-Nixos config compartmentalization, less privileged code
-Vpn configuration for VM
-Nosuid img mount
-Commits organization
-
-Dump rtx pro Nvidia chip dump for backup
-Hermes VPN sharing OR Digitalocean image + VPS
-
-Cloud init: ssh host key, podman compose up -d, network config
-Local portal with VPN
-Simplify nix on amount of hidden options, shown via full eval
-Control plane via tg/web
-Agent usernet: enable firewall, no host wg0:22, --outbound-if4 wg0 --outbound-if6 wg0 not -i wg0, add --no-map-gw --map-host-loopback present
-
-tigor-ai monitoring
-
-http://10.67.69.1:3000/hermes/tigor/compare/main...gpu-reset
-http://10.67.69.1:3000/hermes/tigor/compare/main...isolate-host-params
-
-Proxy: hermes tg
-Proxy: nix copy, podman load, git clone
-Nix builder VM with persistent store
-
-Better hash algo: mkpasswd -m yescrypt -R 11
-nvidia-smi conf-compute -q
-USB mouse passthrough to VM
-Lightweight repo and nix build github:owner/repo
-Xen?
+sec: check no-ai changes
+sec: check ai changes
+sec: policy flags
+sec: nixos config compartmentalization, less privileged code
+sec: VPN configuration for VM
+sec: nosuid img mount
+sec: dump rtx pro Nvidia chip dump for backup
+sec: Hermes VPN sharing OR Digitalocean image + VPS
+sec: cloud init: ssh host key, podman compose up -d, network config
+sec: local portal with VPN
+sec: simplify nix on amount of hidden options, shown via full eval
+sec: control plane via tg/web
+sec: agent usernet: enable firewall, no host wg0:22, --outbound-if4 wg0 --outbound-if6 wg0 not -i wg0, add --no-map-gw --map-host-loopback present
+sec: tigor-ai monitoring
+sec: http://10.67.69.1:3000/hermes/tigor/compare/main...gpu-reset
+sec: http://10.67.69.1:3000/hermes/tigor/compare/main...isolate-host-params
+sec: proxy: hermes tg
+sec: proxy: nix copy, podman load, git clone
+sec: nix builder VM with persistent store
+sec: better hash algo: mkpasswd -m yescrypt -R 11
+sec: nvidia-smi conf-compute -q
+sec: USB mouse passthrough to VM
+sec: Lightweight repo and nix build github:owner/repo
+sec: Xen?
