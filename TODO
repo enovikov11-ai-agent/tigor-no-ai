@@ -1,0 +1,31 @@
+.hermes publish
+
+VPN configuration for VM, local portal with VPN, Hermes VPN sharing OR Digitalocean image + VPS
+
+deploy&check no-ai changes
+
+license check
+deployment url
+
+download dockers
+check ai changes
+policy flags
+nixos config compartmentalization, less privileged code
+nosuid img mount
+dump rtx pro Nvidia chip dump for backup
+cloud init: ssh host key, podman compose up -d, network config
+simplify nix on amount of hidden options, shown via full eval
+control plane via tg/web
+agent usernet: enable firewall, no host wg0:22, --outbound-if4 wg0 --outbound-if6 wg0 not -i wg0, add --no-map-gw --map-host-loopback present
+tigor-ai monitoring agent
+gpu reset http://10.67.69.1:3000/hermes/tigor/compare/main...gpu-reset
+isolate host params http://10.67.69.1:3000/hermes/tigor/compare/main...isolate-host-params
+proxy: hermes tg
+proxy: nix copy, podman load, git clone
+nix builder VM with persistent store
+better hash algo: mkpasswd -m yescrypt -R 11
+nvidia-smi conf-compute -q
+USB mouse passthrough to VM
+Lightweight repo and nix build github:owner/repo
+Xen?
+secureboot
