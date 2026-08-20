@@ -1,27 +1,25 @@
-Vm net, passt not go without VPN on iface down
-VPN configuration for VM, local portal with VPN, Hermes VPN sharing OR Digitalocean image + VPS
+VPN
 
 Dflash
 
-Security test
+Security tests
 
 Gpu burn telegraf
-Model dl
+Sownload models
 Git ui diff
 Ssd hdd by user separation
-Sev es
-
-download models
+SEV ES
 
 .hermes publish
 
 deploy&check no-ai changes
 
-license check
-deployment url
+git scanner for license check
+pages deployment in my infra
+
+userspace VPN
 
 download dockers
-check ai changes
 policy flags
 nixos config compartmentalization, less privileged code
 nosuid img mount
@@ -29,8 +27,7 @@ dump rtx pro Nvidia chip dump for backup
 cloud init: ssh host key, podman compose up -d, network config
 simplify nix on amount of hidden options, shown via full eval
 control plane via tg/web
-agent usernet: enable firewall, no host wg0:22, --outbound-if4 wg0 --outbound-if6 wg0 not -i wg0, add --no-map-gw --map-host-loopback present
-tigor-ai monitoring agent
+tigor-ai git code monitoring agent
 gpu reset http://10.67.69.1:3000/hermes/tigor/compare/main...gpu-reset
 isolate host params http://10.67.69.1:3000/hermes/tigor/compare/main...isolate-host-params
 proxy: hermes tg
