@@ -51,16 +51,14 @@
           </disk>
         </xsl:for-each>
         <xsl:for-each select="cfg:net">
-          <interface type="user">
-            <xsl:if test="@dev"><source dev="{@dev}"/></xsl:if>
+          <interface type="ethernet">
+            <target dev="{@tap}"/>
             <model type="virtio"/>
             <driver iommu="on"/>
             <rom enabled="no"/>
             <address type="pci" domain="0x0000" bus="{@bus}" slot="0x00" function="0x0"/>
-            <backend type="passt"/>
-            <xsl:for-each select="cfg:forward">
-              <portForward proto="tcp"><range start="{@host}" to="{@guest}"/></portForward>
-            </xsl:for-each>
+            <script path="/etc/stateless/if-up.sh"/>
+            <downscript path="/etc/stateless/if-down.sh"/>
           </interface>
         </xsl:for-each>
         <xsl:if test="@ui = 'true'">
@@ -106,10 +104,6 @@
     <mount src="/ssd/vm/hermes" dst="/ssd/vm/hermes"/>
     <mount src="/ssd/telegraf/hermes" dst="/ssd/telegraf/host"/>
     <disk src="/ssd/vm/hermes.qcow2" dst="vda"/>
-    <net dev="wg-hermes" bus="0x04">
-      <forward host="2222" guest="22"/>
-      <forward host="3000" guest="3000"/>
-      <forward host="8000" guest="8000"/>
-    </net>
+    <net tap="tap-hermes" bus="0x04"/>
   </vm>
 </xsl:stylesheet>

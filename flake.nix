@@ -10,7 +10,7 @@
     { self, nixpkgs, ... }:
     let
       # For release candidates use r5-rc1 format
-      revision = "r14";
+      revision = "r15";
 
       # Public password hash is a tradeoff between usability and security, underlying is high entropy
       yubiSshKey = "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIMltMQTMSIcxPbZLNCxkAT/MWRqJo1IFOfH95OoscQbCAAAABHNzaDo= enovikov11@novikov.local";
@@ -209,9 +209,6 @@
           sudo ? false,
           password ? "!",
           authorizedSshKeys ? [ yubiSshKey ],
-          netInterface ? "enp4s0",
-          staticIP ? null,
-          staticIPGateway ? null,
           vsock ? false,
         }:
         let
@@ -275,22 +272,20 @@
                 networking = {
                   hostName = imageName;
                   hostId = lib.mkIf (!vm) "06e694f9";
-                  firewall.enable = false;
+                  firewall.enable = !vm;
                   nftables.enable = true;
+                  nftables.tables = lib.optionalAttrs (!vm) {
+                    vm_jail_guard = {
+                      family = "inet";
+                      content = ''
+                        chain forward {
+                          type filter hook forward priority raw; policy accept;
+                          iifname "tap-*" counter drop
+                        }
+                      '';
+                    };
+                  };
                   networkmanager.enable = true;
-                  interfaces.${netInterface} = {
-                    useDHCP = lib.mkIf (staticIP != null) false;
-                    ipv4.addresses = lib.mkIf (staticIP != null) [
-                      {
-                        address = builtins.head (lib.splitString "/" staticIP);
-                        prefixLength = builtins.fromJSON (builtins.elemAt (lib.splitString "/" staticIP) 1);
-                      }
-                    ];
-                  };
-                  defaultGateway = lib.mkIf (staticIPGateway != null) {
-                    address = staticIPGateway;
-                    interface = netInterface;
-                  };
                 };
 
                 fileSystems."/home/nixos" = lib.mkIf vm {
@@ -479,8 +474,61 @@
                 environment.etc =
                   {
                     "stateless/source.nix".source = ./flake.nix;
+                    "nixos/telegraf.conf".text = ''
+                      [agent]
+                        interval = "10s"
+                      [[inputs.cpu]]
+                        percpu = true
+                        totalcpu = true
+                      [[inputs.mem]]
+                      [[inputs.disk]]
+                        ignore_fs = ["tmpfs", "devtmpfs", "devfs", "sysfs", "squashfs", "efivarfs"]
+                      [[inputs.diskio]]
+                      [[inputs.swap]]
+                      [[inputs.net]]
+                      [[inputs.netstat]]
+                      [[inputs.processes]]
+                      [[inputs.system]]
+                      [[inputs.kernel]]
+                      [[inputs.nvidia_smi]]
+                      [[outputs.file]]
+                        files = ["/ssd/telegraf/host/metrics.log"]
+                        rotation_max_archives = 3
+                        data_format = "influx"
+                    '';
                   }
                   // lib.optionalAttrs (!vm) {
+                    "stateless/if-up.sh" = {
+                      mode = "0755";
+                      text = ''
+                        #!${pkgs.runtimeShell}
+                        set -eu
+
+                        ip netns add "ns-$1"
+                        ip netns exec "ns-$1" sysctl -qw net.ipv4.ip_forward=1
+
+                        ip link set "$1" netns "ns-$1"
+                        ip -n "ns-$1" link set "$1" up
+
+                        ip link add "wg-$1" type wireguard
+                        wg setconf "wg-$1" "/ssd/vm/wg-$1.conf"
+                        ip link set "wg-$1" netns "ns-$1"
+                        ip -n "ns-$1" link set "wg-$1" up
+
+                        ip -n "ns-$1" addr add 169.254.69.1/32 dev "$1"
+                        ip -n "ns-$1" route add 10.67.69.2/32 dev "$1"
+                        ip -n "ns-$1" route add default dev "wg-$1"
+                      '';
+                    };
+                    "stateless/if-down.sh" = {
+                      mode = "0755";
+                      text = ''
+                        #!${pkgs.runtimeShell}
+                        set -eu
+
+                        ip netns del "ns-$1"
+                      '';
+                    };
                     "stateless/vm.xsl" = {
                       source = ./vm.xsl;
                       mode = "0644";
@@ -542,30 +590,6 @@
                   vm-start() { virsh define "/etc/stateless/$1.xml" && virsh start "$1"; }
                   vm-stop() { virsh shutdown "$1" && virsh undefine "$1" --nvram; }
                 '';
-
-                environment.etc."nixos/telegraf.conf".text = ''
-                  [agent]
-                    interval = "10s"
-                  [[inputs.cpu]]
-                    percpu = true
-                    totalcpu = true
-                  [[inputs.mem]]
-                  [[inputs.disk]]
-                    ignore_fs = ["tmpfs", "devtmpfs", "devfs", "sysfs", "squashfs", "efivarfs"]
-                  [[inputs.diskio]]
-                  [[inputs.swap]]
-                  [[inputs.net]]
-                  [[inputs.netstat]]
-                  [[inputs.processes]]
-                  [[inputs.system]]
-                  [[inputs.kernel]]
-                  [[inputs.nvidia_smi]]
-                  [[outputs.file]]
-                    files = ["/ssd/telegraf/host-metrics.log"]
-                    rotation_max_archives = 3
-                    data_format = "influx"
-                '';
-
                 systemd.services.telegraf = {
                   description = "Telegraf metrics collector";
                   wantedBy = [ "multi-user.target" ];
@@ -613,9 +637,6 @@
           vsock = true;
           password = "";
           authorizedSshKeys = [ yubiSshKey hermesSshKey ];
-          netInterface = "enp4s0";
-          staticIP = "10.67.69.2/24";
-          staticIPGateway = "10.67.69.1";
         };
       };
 
