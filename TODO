@@ -1,8 +1,19 @@
+Vm net, passt not go without VPN on iface down
+VPN configuration for VM, local portal with VPN, Hermes VPN sharing OR Digitalocean image + VPS
+
+Dflash
+
+Security test
+
+Gpu burn telegraf
+Model dl
+Git ui diff
+Ssd hdd by user separation
+Sev es
+
 download models
 
 .hermes publish
-
-VPN configuration for VM, local portal with VPN, Hermes VPN sharing OR Digitalocean image + VPS
 
 deploy&check no-ai changes
 
@@ -31,3 +42,5 @@ USB mouse passthrough to VM
 Lightweight repo and nix build github:owner/repo
 Xen?
 secureboot
+
+CMP 170HX
