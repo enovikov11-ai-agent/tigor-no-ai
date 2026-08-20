@@ -97,7 +97,7 @@
     </domain>
   </xsl:template>
 
-  <vm xmlns="urn:vm-config" name="hermes" cpu="64" ram="128" ui="true" gpu="true" vsock="true" kernel="/ssd/vm/vm-r14-nvda-pods-BOOTX64.efi">
+  <vm xmlns="urn:vm-config" name="hermes" cpu="64" ram="128" ui="true" gpu="true" vsock="true" kernel="vm-r15-nvda-pods-vsock-BOOTX64.efi">
     <mount src="/ssd/internet" dst="/ssd/internet" readonly="true"/>
     <mount src="/hdd/internet/kiwix" dst="/hdd/internet/kiwix" readonly="true"/>
     <mount src="/hdd/internet/wikipedia" dst="/hdd/internet/wikipedia" readonly="true"/>

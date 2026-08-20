@@ -10,7 +10,7 @@
     { self, nixpkgs, ... }:
     let
       # For release candidates use r5-rc1 format
-      revision = "r15";
+      revision = "r16";
 
       # Public password hash is a tradeoff between usability and security, underlying is high entropy
       yubiSshKey = "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIMltMQTMSIcxPbZLNCxkAT/MWRqJo1IFOfH95OoscQbCAAAABHNzaDo= enovikov11@novikov.local";
@@ -302,9 +302,7 @@
                   enable = true;
                   generateHostKeys = vm;
                   openFirewall = true;
-                  extraConfig = lib.mkIf (vm && vsock) ''
-                    ListenAddress vsock:*:22
-                  '';
+                  startWhenNeeded = vm && vsock;
                   settings = {
                     AuthenticationMethods = "publickey";
                     PasswordAuthentication = false;
@@ -398,6 +396,9 @@
 
                 services.qemuGuest.enable = vm;
                 services.spice-vdagentd.enable = vm && gnome;
+                systemd.sockets.sshd = lib.mkIf (vm && vsock) {
+                  socketConfig.ListenStream = lib.mkForce "vsock::22";
+                };
                 systemd.services.mount-virtiofs-shares = lib.mkIf vm {
                   description = "Mount virtiofs path shares";
                   wantedBy = [ "multi-user.target" ];
@@ -505,13 +506,13 @@
                         set -eu
 
                         ip netns add "ns-$1"
-                        ip netns exec "ns-$1" sysctl -qw net.ipv4.ip_forward=1
+                        ip netns exec "ns-$1" ${pkgs.procps}/bin/sysctl -qw net.ipv4.ip_forward=1
 
                         ip link set "$1" netns "ns-$1"
                         ip -n "ns-$1" link set "$1" up
 
                         ip link add "wg-$1" type wireguard
-                        wg setconf "wg-$1" "/ssd/vm/wg-$1.conf"
+                        ${pkgs.wireguard-tools}/bin/wg setconf "wg-$1" "/ssd/vm/wg-$1.conf"
                         ip link set "wg-$1" netns "ns-$1"
                         ip -n "ns-$1" link set "wg-$1" up
 

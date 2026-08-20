@@ -8,40 +8,25 @@ See also https://github.com/enovikov11/tigor-ai
 
 find . -type f -exec sha256sum {} +
 
-## Commands
-
-### Host
-ssh root@192.168.1.28
-
-### VM (via SSH port forward on host)
-ssh -J root@192.168.1.28 root@127.0.0.1 -p 2222
-
-### VM (via vsock — independent of network config)
-From host: `ssh -o ProxyCommand='vsock-sendto %h %p' nixos@3`
-
-From laptop (YubiKey on laptop, jump through host):
-```
+ssh box
+ssh -J box root@127.0.0.1 -p 2222
+ssh -o ProxyCommand='vsock-sendto %h %p' nixos@3
 ssh -o ProxyCommand='ssh root@192.168.1.28 vsock-sendto %h %p' nixos@3
-```
 
-Or via SSH config (`~/.ssh/config`):
-```
 Host vm-vsock
   HostName 3
   User nixos
   ProxyCommand ssh root@192.168.1.28 vsock-sendto %h %p
-```
 
-Connect with: `ssh vm-vsock`
-
-nix build
+nix build .#host
 mkdir /root/mnt
 mount /dev/sde1 /root/mnt
 df -h /root/mnt
 cd /root/mnt/EFI/BOOT/
 mv BOOTX64.efi "$(date '+%Y-%m-%d_%H-%M-%S')_BOOTX64.efi"
-cp /root/result/host-*-BOOTX64.efi /root/mnt/EFI/BOOT/BOOTX64.efi
+cp /etc/stateless/result/host-*-BOOTX64.efi /root/mnt/EFI/BOOT/BOOTX64.efi
 sync
+cd ~
 umount /root/mnt
 reboot now
 
