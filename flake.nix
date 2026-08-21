@@ -10,7 +10,7 @@
     { self, nixpkgs, ... }:
     let
       # For release candidates use r5-rc1 format
-      revision = "r18-rc1";
+      revision = "r18";
 
       # Public password hash is a tradeoff between usability and security, underlying is high entropy
       yubiSshKey = "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIMltMQTMSIcxPbZLNCxkAT/MWRqJo1IFOfH95OoscQbCAAAABHNzaDo= enovikov11@novikov.local";
@@ -302,7 +302,9 @@
                   enable = true;
                   generateHostKeys = vm;
                   openFirewall = true;
-                  startWhenNeeded = vm && vsock;
+                  extraConfig = lib.mkIf (vm && vsock) ''
+                    ListenAddress vsock:*:22
+                  '';
                   settings = {
                     AuthenticationMethods = "publickey";
                     PasswordAuthentication = false;
