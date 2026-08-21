@@ -486,7 +486,6 @@
 
                 environment.etc =
                   {
-                    "stateless/source.nix".source = ./flake.nix;
                     "nixos/telegraf.conf".text = ''
                       [agent]
                         interval = "10s"
@@ -509,12 +508,19 @@
                         rotation_max_archives = 3
                         data_format = "influx"
                     '';
+                    "stateless/flake.nix.bak".source = ./flake.nix;
+                    "stateless/flake.nix" = {
+                      source = ./flake.xsl;
+                      mode = "0644";
+                    };
                   }
                   // lib.optionalAttrs (!vm) {
+                    "stateless/vm.xsl.bak".source = ./vm.xsl;
                     "stateless/vm.xsl" = {
                       source = ./vm.xsl;
                       mode = "0644";
                     };
+                    "stateless/vm.sh.bak".source = ./vm.sh;
                     "stateless/vm.sh" = {
                       source = ./vm.sh;
                       mode = "0644";
