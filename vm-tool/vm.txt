@@ -3,78 +3,98 @@ podman run --rm -it \
     --name vm \
     --device=/dev/kvm \
     --device=/dev/vhost-vsock \
-    -v /ssd/vm:/ssd/vm:ro \
+    --device=/dev/vfio/vfio \
+    --device=/dev/vfio/28 \
+    -v /ssd/vm:/ssd/vm \
+    -v /ssd/internet:/ssd/internet \
     -v /run/libvirt/nix-ovmf/edk2-x86_64-code.fd:/ovmf.fd:ro \
-    --network ns:/run/netns/ns-hermes
+    --network ns:/run/netns/ns-hermes \
+    --priveleged
     qemu-runtime
+
+podman exec -it vm bash
+
+mkdir -p /tmp
+chmod 1777 /tmp
+echo 'nobody:x:65534:65534:nobody:/nonexistent:/sbin/nologin' >> /etc/passwd
+echo 'nobody:x:65534:' >> /etc/group
+mkdir -p /run/virtiofs
+
+passt \
+    --foreground \
+    --vhost-user \
+    --socket /run/hermes-passt.sock \
+    --repair-path none \
+    --interface wg-hermes \
+    --outbound-if4 wg-hermes \
+    --ipv4-only \
+    --mtu 1420 \
+    --address 10.67.69.2 \
+    --netmask 24 \
+    --gateway 10.67.69.1 \
+    --no-map-gw \
+    --map-host-loopback none \
+    --map-guest-addr none \
+    --tcp-ports all \
+    --udp-ports all
+
+virtiofsd \
+  --socket-path=/run/internet.sock \
+  --shared-dir=/ssd/internet \
+  --readonly --sandbox=none
 
 qemu-system-x86_64 \
     -nodefaults \
     -no-user-config \
-    -machine pc-q35-10.2,usb=off,vmport=off,smm=off,dump-guest-core=off \
+    -machine pc-q35-10.2,memory-backend=ram,usb=off,vmport=off,smm=off,dump-guest-core=off \
     -accel kvm \
     -cpu host,migratable=off \
-    -m 10G \
+    -object memory-backend-memfd,id=ram,size=10G,share=on \
     -smp 10 \
     -rtc base=utc \
     -drive if=pflash,format=raw,readonly=on,file=/ovmf.fd \
-    -kernel /ssd/vm/vm-r17-nvda-pods-vsock-BOOTX64.efi \
+    -kernel /ssd/vm/vm-r18-rc1-nvda-pods-vsock-BOOTX64.efi \
     -sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny \
     -object rng-random,id=rng,filename=/dev/urandom \
     -device virtio-rng-pci,rng=rng \
     -display none \
     -device vhost-vsock-pci,guest-cid=3 \
+    -serial stdio \
+    -monitor none \
     -drive file=/ssd/vm/hermes.qcow2,if=virtio,format=qcow2,discard=unmap \
     -device vfio-pci,host=0000:41:00.0 \
-    -device vfio-pci,host=0000:41:00.1
-  
+    -device vfio-pci,host=0000:41:00.1 \
+    -chardev socket,id=net0,path=/run/hermes-passt.sock \
+    -netdev vhost-user,chardev=net0,id=net \
+    -device virtio-net-pci,netdev=net,mac=52:54:00:a9:f5:da,romfile=
+
+
     -chardev socket,id=fs0,path=/var/lib/libvirt/qemu/domain-1-hermes/fs0-fs.sock \
     -device vhost-user-fs-pci,chardev=fs0,tag=/ssd/internet \
 
-    -chardev socket,id=net0,path=/run/hermes-passt.sock \
-    -netdev vhost-user,chardev=net0,id=net \
-    -device virtio-net-pci,netdev=net,mac=52:54:00:a9:f5:da,romfile= \
 
 
-
-
-
- 
 
  -boot strict=on
  
- -device {"driver":"pcie-root-port","port":16,"chassis":1,"id":"pci.1","bus":"pcie.0","multifunction":true,"addr":"0x2"}
- -device {"driver":"pcie-root-port","port":17,"chassis":2,"id":"pci.2","bus":"pcie.0","addr":"0x2.0x1"}
- -device {"driver":"pcie-root-port","port":18,"chassis":3,"id":"pci.3","bus":"pcie.0","addr":"0x2.0x2"}
- -device {"driver":"pcie-root-port","port":19,"chassis":4,"id":"pci.4","bus":"pcie.0","addr":"0x2.0x3"}
- -device {"driver":"pcie-root-port","port":20,"chassis":5,"id":"pci.5","bus":"pcie.0","addr":"0x2.0x4"}
- -device {"driver":"pcie-root-port","port":21,"chassis":6,"id":"pci.6","bus":"pcie.0","addr":"0x2.0x5"}
- -device {"driver":"pcie-root-port","port":22,"chassis":7,"id":"pci.7","bus":"pcie.0","addr":"0x2.0x6"}
- -device {"driver":"pcie-root-port","port":23,"chassis":8,"id":"pci.8","bus":"pcie.0","addr":"0x2.0x7"}
- -device {"driver":"pcie-root-port","port":24,"chassis":9,"id":"pci.9","bus":"pcie.0","multifunction":true,"addr":"0x3"}
- -device {"driver":"pcie-root-port","port":25,"chassis":10,"id":"pci.10","bus":"pcie.0","addr":"0x3.0x1"}
- -device {"driver":"pcie-root-port","port":26,"chassis":11,"id":"pci.11","bus":"pcie.0","addr":"0x3.0x2"}
- -device {"driver":"pcie-root-port","port":27,"chassis":12,"id":"pci.12","bus":"pcie.0","addr":"0x3.0x3"}
- -device {"driver":"pcie-root-port","port":28,"chassis":13,"id":"pci.13","bus":"pcie.0","addr":"0x3.0x4"}
- -device {"driver":"qemu-xhci","id":"usb","bus":"pci.7","addr":"0x0"}
  -blockdev {"driver":"file","filename":"/ssd/vm/hermes.qcow2","node-name":"libvirt-1-storage","auto-read-only":true,"discard":"unmap"}
  -blockdev {"node-name":"libvirt-1-format","read-only":false,"driver":"qcow2","file":"libvirt-1-storage","backing":null}
+
  -device {"driver":"virtio-blk-pci","iommu_platform":true,"bus":"pci.8","addr":"0x0","drive":"libvirt-1-format","id":"virtio-disk0","bootindex":1}
  -chardev socket,id=chr-vu-fs0,path=/var/lib/libvirt/qemu/domain-1-hermes/fs0-fs.sock
+
  -device {"driver":"vhost-user-fs-pci","id":"fs0","chardev":"chr-vu-fs0","tag":"/ssd/internet","bus":"pci.1","addr":"0x0"}
  -chardev socket,id=chr-vu-fs1,path=/var/lib/libvirt/qemu/domain-1-hermes/fs1-fs.sock
- -device {"driver":"vhost-user-fs-pci","id":"fs1","chardev":"chr-vu-fs1","tag":"/hdd/internet/kiwix","bus":"pci.2","addr":"0x0"}
- -chardev socket,id=chr-vu-fs2,path=/var/lib/libvirt/qemu/domain-1-hermes/fs2-fs.sock
- -device {"driver":"vhost-user-fs-pci","id":"fs2","chardev":"chr-vu-fs2","tag":"/hdd/internet/wikipedia","bus":"pci.3","addr":"0x0"}
- -chardev socket,id=chr-vu-fs3,path=/var/lib/libvirt/qemu/domain-1-hermes/fs3-fs.sock
- -device {"driver":"vhost-user-fs-pci","id":"fs3","chardev":"chr-vu-fs3","tag":"/ssd/vm/hermes","bus":"pci.5","addr":"0x0"}
- -chardev socket,id=chr-vu-fs4,path=/var/lib/libvirt/qemu/domain-1-hermes/fs4-fs.sock
+
  -device {"driver":"vhost-user-fs-pci","id":"fs4","chardev":"chr-vu-fs4","tag":"/ssd/telegraf/host","bus":"pci.6","addr":"0x0"}
  -chardev socket,id=charnet0,path=/run/hermes-passt.sock
  -netdev {"type":"vhost-user","chardev":"charnet0","id":"hostnet0"}
  -device {"driver":"virtio-net-pci","netdev":"hostnet0","id":"net0","mac":"52:54:00:a9:f5:da","bus":"pci.4","addr":"0x0","romfile":""}
+
  -audiodev {"id":"audio1","driver":"none"}
+
  -spice unix=on,addr=/var/lib/libvirt/qemu/domain-1-hermes/spice.sock,disable-ticketing=on,image-compression=off,seamless-migration=on
+
  -device {"driver":"virtio-vga","id":"video0","max_outputs":1,"bus":"pcie.0","addr":"0x1"}
  -global ICH9-LPC.noreboot=off
  -watchdog-action reset
@@ -83,7 +103,3 @@ qemu-system-x86_64 \
  -object {"qom-type":"rng-random","id":"objrng0","filename":"/dev/urandom"}
  -device {"driver":"virtio-rng-pci","iommu_platform":true,"rng":"objrng0","id":"rng0","bus":"pci.11","addr":"0x0"}
  
- -device {"driver":"vhost-vsock-pci","id":"vsock0","guest-cid":3,"vhostfd":"28","bus":"pci.12","addr":"0x0"}
- -msg timestamp=on
-
-

@@ -10,7 +10,7 @@
     { self, nixpkgs, ... }:
     let
       # For release candidates use r5-rc1 format
-      revision = "r17";
+      revision = "r18-rc1";
 
       # Public password hash is a tradeoff between usability and security, underlying is high entropy
       yubiSshKey = "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIMltMQTMSIcxPbZLNCxkAT/MWRqJo1IFOfH95OoscQbCAAAABHNzaDo= enovikov11@novikov.local";
@@ -367,6 +367,10 @@
                     "modprobe.blacklist=ast"
                     "transparent_hugepage=madvise"
                   ]
+                  ++ lib.optionals vm [
+                    "console=tty0"
+                    "console=ttyS0,115200n8"
+                  ]
                   ++ lib.optionals (!vm) [
                     "default_hugepagesz=1G"
                     "hugepagesz=1G"
@@ -388,6 +392,8 @@
                   };
                   zfs.forceImportRoot = lib.mkIf (!vm) false;
                 };
+
+                systemd.services."serial-getty@ttyS0".enable = lib.mkIf vm true;
 
                 services.udev.extraRules = lib.optionalString (!vm) ''
                   SUBSYSTEM=="misc", KERNEL=="sev", GROUP="kvm", MODE="0660"

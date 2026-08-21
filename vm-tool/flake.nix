@@ -20,6 +20,11 @@
         virtiofsd
         passt
         iproute2
+        coreutils
+  findutils
+  gnugrep
+  gnused
+  gawk
       ];
     in
     {
