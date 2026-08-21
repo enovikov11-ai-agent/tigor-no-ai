@@ -82,7 +82,7 @@ run_qemu() {
         -machine pc-q35-10.2,memory-backend=ram,usb=off,vmport=off,smm=off,dump-guest-core=off \
         -accel kvm \
         -cpu host,migratable=off \
-        -object memory-backend-memfd,id=ram,size=256G,share=on \
+        -object memory-backend-memfd,id=ram,size=256G,share=on,hugetlb=on,hugetlbsize=1G \
         -smp 128 \
         -rtc base=utc \
         -drive if=pflash,format=raw,readonly=on,file=/run/libvirt/nix-ovmf/edk2-x86_64-code.fd \
@@ -95,8 +95,9 @@ run_qemu() {
         -serial stdio \
         -monitor none \
         -drive file="/ssd/vm/${VM_NAME}.qcow2",if=virtio,format=qcow2,discard=unmap \
-        -device vfio-pci,host=0000:41:00.0 \
-        -device vfio-pci,host=0000:41:00.1 \
+        -object iommufd,id=iommufd0 \
+        -device vfio-pci,host=0000:41:00.0,iommufd=iommufd0 \
+        -device vfio-pci,host=0000:41:00.1,iommufd=iommufd0 \
         -chardev socket,id=net0,path="/run/${VM_NAME}-passt.sock" \
         -netdev vhost-user,chardev=net0,id=net \
         -device virtio-net-pci,netdev=net,mac=52:54:00:a9:f5:da,romfile= \

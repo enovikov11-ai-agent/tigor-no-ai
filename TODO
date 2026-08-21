@@ -1,5 +1,7 @@
 run vm.sh as not root
 
+compare qemu command with libvirt
+
 Wg manage py tool
 del old and DEAD.md for no ai: vm.xsl and scripts
 Wpex & udp punch

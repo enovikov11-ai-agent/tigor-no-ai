@@ -374,6 +374,7 @@
                   ++ lib.optionals (!vm) [
                     "default_hugepagesz=1G"
                     "hugepagesz=1G"
+                    "hugepages=256"
                     "kvm_amd.sev=1"
                     "kvm_amd.sev_es=1"
                     "amd_iommu=on"
@@ -512,6 +513,10 @@
                       source = ./vm.xsl;
                       mode = "0644";
                     };
+                    "stateless/vm.sh" = {
+                      source = ./vm.sh;
+                      mode = "0644";
+                    };
                     "stateless/ssh_host_ed25519_key" = {
                       source = ./ssh_host_ed25519_key;
                       mode = "0600";
@@ -527,6 +532,7 @@
                     git
                     htop
                     python3
+                    reptyr
                     tmux
                     vim
                     tree
