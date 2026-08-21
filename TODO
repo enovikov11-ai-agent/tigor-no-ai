@@ -1,19 +1,10 @@
+run vm.sh as not root
 
-All vm tool as a script, not fail midway
 Wg manage py tool
-DEAD.md for no ai
+del old and DEAD.md for no ai: vm.xsl and scripts
 Wpex & udp punch
 
-Vm.py
-Configs
-Down (force) podman stop -f; netns del
-Up: down, netns create wg up, podman run: viriofs, passt, qemu
-Ps
-Halt
-
-VM telegraf check
-
-fix telegraf on host
+telegraf: fix host, vm
 
 Dflash
 
