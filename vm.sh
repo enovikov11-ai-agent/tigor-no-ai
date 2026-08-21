@@ -28,6 +28,18 @@ setup_wg() {
     ip -n "ns-${VM_NAME}" route add default via 10.67.69.1 dev "wg-${VM_NAME}"
 }
 
+wait_socket() {
+    local socket=$1
+
+    for _ in {1..100}; do
+        [[ -S "$socket" ]] && return
+        sleep 0.01
+    done
+
+    echo "socket did not appear: $socket" >&2
+    return 1
+}
+
 start_passt() {
     rm -f "/run/${VM_NAME}-passt.sock"
 
@@ -48,6 +60,8 @@ start_passt() {
         --map-guest-addr none \
         --tcp-ports all \
         --udp-ports all &
+    
+    wait_socket "/run/${VM_NAME}-passt.sock"
 }
 
 start_virtiofsd() {
@@ -57,6 +71,8 @@ start_virtiofsd() {
         --socket-path="/run/${VM_NAME}-internet.sock" \
         --shared-dir=/ssd/internet \
         --readonly &
+    
+    wait_socket "/run/${VM_NAME}-internet.sock"
 }
 
 run_qemu() {
