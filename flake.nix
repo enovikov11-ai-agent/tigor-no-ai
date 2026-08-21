@@ -302,7 +302,9 @@
                   enable = true;
                   generateHostKeys = vm;
                   openFirewall = true;
-                  startWhenNeeded = vm && vsock;
+                  extraConfig = lib.mkIf (vm && vsock) ''
+                    ListenAddress vsock:*:22
+                  '';
                   settings = {
                     AuthenticationMethods = "publickey";
                     PasswordAuthentication = false;
