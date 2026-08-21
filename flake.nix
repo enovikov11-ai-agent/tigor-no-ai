@@ -10,7 +10,7 @@
     { self, nixpkgs, ... }:
     let
       # For release candidates use r5-rc1 format
-      revision = "r16";
+      revision = "r17";
 
       # Public password hash is a tradeoff between usability and security, underlying is high entropy
       yubiSshKey = "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIMltMQTMSIcxPbZLNCxkAT/MWRqJo1IFOfH95OoscQbCAAAABHNzaDo= enovikov11@novikov.local";
@@ -397,7 +397,10 @@
                 services.qemuGuest.enable = vm;
                 services.spice-vdagentd.enable = vm && gnome;
                 systemd.sockets.sshd = lib.mkIf (vm && vsock) {
-                  socketConfig.ListenStream = lib.mkForce "vsock::22";
+                  socketConfig.ListenStream = lib.mkForce [
+                    "0.0.0.0:22"
+                    "vsock::22"
+                  ];
                 };
                 systemd.services.mount-virtiofs-shares = lib.mkIf vm {
                   description = "Mount virtiofs path shares";
@@ -499,37 +502,6 @@
                     '';
                   }
                   // lib.optionalAttrs (!vm) {
-                    "stateless/if-up.sh" = {
-                      mode = "0755";
-                      text = ''
-                        #!${pkgs.runtimeShell}
-                        set -eu
-
-                        ip netns add "ns-$1"
-                        ip netns exec "ns-$1" ${pkgs.procps}/bin/sysctl -qw net.ipv4.ip_forward=1
-
-                        ip link set "$1" netns "ns-$1"
-                        ip -n "ns-$1" link set "$1" up
-
-                        ip link add "wg-$1" type wireguard
-                        ${pkgs.wireguard-tools}/bin/wg setconf "wg-$1" "/ssd/vm/wg-$1.conf"
-                        ip link set "wg-$1" netns "ns-$1"
-                        ip -n "ns-$1" link set "wg-$1" up
-
-                        ip -n "ns-$1" addr add 169.254.69.1/32 dev "$1"
-                        ip -n "ns-$1" route add 10.67.69.2/32 dev "$1"
-                        ip -n "ns-$1" route add default dev "wg-$1"
-                      '';
-                    };
-                    "stateless/if-down.sh" = {
-                      mode = "0755";
-                      text = ''
-                        #!${pkgs.runtimeShell}
-                        set -eu
-
-                        ip netns del "ns-$1"
-                      '';
-                    };
                     "stateless/vm.xsl" = {
                       source = ./vm.xsl;
                       mode = "0644";
@@ -579,6 +551,7 @@
                       virt-manager
                       passt
                       virtiofsd
+                      socat
                     ]
                   );
                 environment.sessionVariables = lib.optionalAttrs vscodium { NIXOS_OZONE_WL = "1"; };

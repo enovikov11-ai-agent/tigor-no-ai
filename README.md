@@ -10,14 +10,13 @@ find . -type f -exec sha256sum {} +
 
 ssh box
 ssh -J box root@127.0.0.1 -p 2222
-ssh -o ProxyCommand='vsock-sendto %h %p' nixos@3
-ssh -o ProxyCommand='ssh root@192.168.1.28 vsock-sendto %h %p' nixos@3
+ssh -o 'ProxyCommand=ssh box socat - VSOCK-CONNECT:3:22' root@vm
 
-Host vm-vsock
-  HostName 3
-  User nixos
-  ProxyCommand ssh root@192.168.1.28 vsock-sendto %h %p
+cd /etc/stateless/
+nix build .#vm
+cp /etc/stateless/result/vm-*-BOOTX64.efi /ssd/vm
 
+cd /etc/stateless/
 nix build .#host
 mkdir /root/mnt
 mount /dev/sde1 /root/mnt
@@ -34,14 +33,9 @@ diff /etc/stateless/flake.nix /etc/stateless/source.nix
 nix build .#host
 nixos-rebuild switch --flake .#vm --override flake.nix '{ modules = [{ networking.firewall.enable = true; }]; }'
 
-virsh dumpxml hermes
-
 apt install wireguard-tools
 ufw allow 2026/udp
 wg-quick up ./wg-hermes.conf
-
-ip addr add 10.67.69.2/24 dev eth0
-ip route add 10.67.69.1/32 dev eth0
 
 sshfs nixos@10.67.69.2:/home/nixos /home/nixos -o Port=2222,reconnect
 
@@ -62,6 +56,39 @@ find . -type f -exec chmod 664 {} +
 qemu-img create -f qcow2 /ssd/vm/hermes.qcow2 500G
 mkfs.ext4 -L data /dev/vda
 chown -R nixos:users /home/nixos
+
+ip netns exec ns-hermes passt \
+    --foreground \
+    --vhost-user \
+    --socket /run/hermes-passt.sock \
+    --repair-path none \
+    --interface wg-hermes \
+    --outbound-if4 wg-hermes \
+    --ipv4-only \
+    --mtu 1420 \
+    --address 10.67.69.2 \
+    --netmask 24 \
+    --gateway 10.67.69.1 \
+    --no-map-gw \
+    --map-host-loopback none \
+    --map-guest-addr none \
+    --tcp-ports all \
+    --udp-ports all
+  
+chmod 777 /run/hermes-passt.sock
+
+ip netns add ns-hermes
+ip link add wg-hermes type wireguard
+wg setconf wg-hermes /ssd/vm/ns-wg-hermes.conf
+ip link set wg-hermes netns ns-hermes
+
+ip -n ns-hermes addr add 10.67.69.2/24 dev wg-hermes
+ip -n ns-hermes link set wg-hermes up
+ip -n ns-hermes route add default via 10.67.69.1 dev wg-hermes
+
+podman load < result
+
+ssh-keygen -R vm
 
 ## Learnings
 

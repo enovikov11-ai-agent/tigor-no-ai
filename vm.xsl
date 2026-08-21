@@ -51,14 +51,11 @@
           </disk>
         </xsl:for-each>
         <xsl:for-each select="cfg:net">
-          <interface type="ethernet">
-            <target dev="{@tap}"/>
+          <interface type="vhostuser">
+            <source type="unix" path="{@socket}" mode="client"/>
             <model type="virtio"/>
-            <driver iommu="on"/>
             <rom enabled="no"/>
             <address type="pci" domain="0x0000" bus="{@bus}" slot="0x00" function="0x0"/>
-            <script path="/etc/stateless/if-up.sh"/>
-            <downscript path="/etc/stateless/if-down.sh"/>
           </interface>
         </xsl:for-each>
         <xsl:if test="@ui = 'true'">
@@ -97,13 +94,13 @@
     </domain>
   </xsl:template>
 
-  <vm xmlns="urn:vm-config" name="hermes" cpu="64" ram="128" ui="true" gpu="true" vsock="true" kernel="vm-r15-nvda-pods-vsock-BOOTX64.efi">
+  <vm xmlns="urn:vm-config" name="hermes" cpu="64" ram="128" ui="true" gpu="true" vsock="true" kernel="/ssd/vm/vm-r17-nvda-pods-vsock-BOOTX64.efi">
     <mount src="/ssd/internet" dst="/ssd/internet" readonly="true"/>
     <mount src="/hdd/internet/kiwix" dst="/hdd/internet/kiwix" readonly="true"/>
     <mount src="/hdd/internet/wikipedia" dst="/hdd/internet/wikipedia" readonly="true"/>
     <mount src="/ssd/vm/hermes" dst="/ssd/vm/hermes"/>
     <mount src="/ssd/telegraf/hermes" dst="/ssd/telegraf/host"/>
     <disk src="/ssd/vm/hermes.qcow2" dst="vda"/>
-    <net tap="tap-hermes" bus="0x04"/>
+    <net socket="/run/hermes-passt.sock" bus="0x04"/>
   </vm>
 </xsl:stylesheet>
