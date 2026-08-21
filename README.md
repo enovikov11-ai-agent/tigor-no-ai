@@ -90,6 +90,8 @@ podman load < result
 
 ssh-keygen -R vm
 
+ls /run/netns
+
 ## Learnings
 
 Memory can be encrypted with TSME, but it hurts perf
