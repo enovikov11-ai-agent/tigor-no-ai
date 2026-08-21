@@ -66,8 +66,8 @@ run_qemu() {
         -machine pc-q35-10.2,memory-backend=ram,usb=off,vmport=off,smm=off,dump-guest-core=off \
         -accel kvm \
         -cpu host,migratable=off \
-        -object memory-backend-memfd,id=ram,size=10G,share=on \
-        -smp 10 \
+        -object memory-backend-memfd,id=ram,size=256G,share=on \
+        -smp 128 \
         -rtc base=utc \
         -drive if=pflash,format=raw,readonly=on,file=/run/libvirt/nix-ovmf/edk2-x86_64-code.fd \
         -kernel /ssd/vm/vm-r18-rc1-nvda-pods-vsock-BOOTX64.efi \
