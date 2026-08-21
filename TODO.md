@@ -1,51 +1,63 @@
-run vm.sh as not root
+# VM runner
 
-compare qemu command with libvirt
+Make VM have full inet; Move hermes to docker
+Harden vm.sh, because it runs as root
+Compare qemu command with libvirt command, and research overall security
 
-Wg manage py tool
-del old and DEAD.md for no ai: vm.xsl and scripts
-Wpex & udp punch
+# Infra
 
-telegraf: fix host, vm
-
-Dflash
-
-Security tests
-
-Gpu burn telegraf
-Download models
-Git ui diff
-Ssd hdd by user separation
-SEV ES
-
-.hermes publish
-
-multivm networking
-
-git scanner for license check
-pages deployment in my infra
-
-userspace VPN
+# Data diode & data hoarding /internet
 
 download dockers
-policy flags
-nixos config compartmentalization, less privileged code
-nosuid img mount
-dump rtx pro Nvidia chip dump for backup
-cloud init: ssh host key, podman compose up -d, network config
-simplify nix on amount of hidden options, shown via full eval
-control plane via tg/web
-tigor-ai git code monitoring agent
-gpu reset http://10.67.69.1:3000/hermes/tigor/compare/main...gpu-reset
-isolate host params http://10.67.69.1:3000/hermes/tigor/compare/main...isolate-host-params
 proxy: hermes tg
 proxy: nix copy, podman load, git clone
 nix builder VM with persistent store
-better hash algo: mkpasswd -m yescrypt -R 11
-nvidia-smi conf-compute -q
-USB mouse passthrough to VM
+
+# General security
+
+# Misc
+
 Lightweight repo and nix build github:owner/repo
-Xen?
+
+.hermes publish
+
+Download models
+Dflash
+Gpu burn telegraf
+
+pages deployment in my infra
+
+Wpex & udp punch
+telegraf: fix host, vm
+
+nixos config compartmentalization, less privileged code
+
+Security tests
+git scanner for license check
+tigor-ai git code monitoring agent
+
+userspace VPN
+
+nosuid img mount
+
 secureboot
 
-CMP 170HX
+dump rtx pro Nvidia chip dump for backup
+
+cloud init: ssh host key, podman compose up -d, network config
+
+simplify nix on amount of hidden options, shown via full eval
+
+control plane via tg/web
+
+gpu reset http://10.67.69.1:3000/hermes/tigor/compare/main...gpu-reset
+isolate host params http://10.67.69.1:3000/hermes/tigor/compare/main...isolate-host-params
+
+better hash algo: mkpasswd -m yescrypt -R 11
+
+nvidia-smi conf-compute -q
+
+# Big ideas maybe to do
+
+Move to Xen from KVM
+Buy CMP 170HX
