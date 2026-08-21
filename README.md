@@ -74,6 +74,7 @@ ssh-keygen -R vm
 
 ls /run/netns
 
+
 ip netns add ns-hermes
 ip link add wg-hermes type wireguard
 wg setconf wg-hermes /ssd/vm/ns-wg-hermes.conf
@@ -132,4 +133,3 @@ qemu-system-x86_64 \
     -device virtio-net-pci,netdev=net,mac=52:54:00:a9:f5:da,romfile= \
     -chardev socket,id=fs0,path=/run/hermes-internet.sock \
     -device vhost-user-fs-pci,chardev=fs0,tag=/ssd/internet
-
