@@ -510,7 +510,7 @@
                     '';
                     "stateless/flake.nix.bak".source = ./flake.nix;
                     "stateless/flake.nix" = {
-                      source = ./flake.xsl;
+                      source = ./flake.nix;
                       mode = "0644";
                     };
                   }
