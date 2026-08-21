@@ -10,45 +10,40 @@ Compare qemu command with libvirt command, and research overall security
 Download models
 Dflash
 Gpu burn telegraf
-pages deployment in my infra
+Pages deployment in my infra
 Wpex & udp punch
-telegraf: fix host, vm
-control plane via tg/web
-
-cloud init: ssh host key, podman compose up -d, network config
+Telegraf: fix host, vm
+Control plane via tg/web
+Cloud init: ssh host key, podman compose up -d, network config
 
 # Data diode & data hoarding /internet
 
-download dockers
-proxy: hermes tg
-proxy: nix copy, podman load, git clone
-nix builder VM with persistent store
+Docker images
+Telegram proxy
+Nix copy
+Git clone
 
 # General security
 
-Lightweight repo and nix build github:owner/repo
-nixos config compartmentalization, less privileged code
-
-Security tests
-git scanner for license check
-tigor-ai git code monitoring agent
-
-userspace VPN
+Nested vm run
 nosuid img mount
-secureboot
-
 gpu reset http://10.67.69.1:3000/hermes/tigor/compare/main...gpu-reset
-isolate host params http://10.67.69.1:3000/hermes/tigor/compare/main...isolate-host-params
 
-simplify nix on amount of hidden options, shown via full eval
+multiple VMs
 
-better hash algo: mkpasswd -m yescrypt -R 11
+git scan: license
+git scan: commits summary and digest
+userspace VPN
+Secureboot
+Nixos config compartmentalization, less privileged code
+Decide what sec invariants are
+Simplify nix on amount of hidden options, shown via full eval
+Better hash algo: mkpasswd -m yescrypt -R 11
 
-# rtx pro
+# RTX PRO
 
-dump rtx pro Nvidia chip dump for backup
-
-nvidia-smi conf-compute -q
+Dump rtx pro Nvidia chip dump for backup
+SEV ES & nvidia-smi conf-compute -q
 
 # Big ideas maybe to do
 
