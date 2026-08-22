@@ -114,7 +114,7 @@ run_qemu() {
         -device virtio-net-pci,netdev=net,mac=52:54:00:a9:f5:da,romfile= \
         -chardev socket,id=fs0,path="/run/${VM_NAME}-internet.sock" \
         -device vhost-user-fs-pci,chardev=fs0,tag=/ssd/internet \
-        -chardev socket,id=fs1,path="/run/${VM_NAME}-internet.sock" \
+        -chardev socket,id=fs1,path="/run/${VM_NAME}-data.sock" \
         -device vhost-user-fs-pci,chardev=fs1,tag=/ssd/vm/hermes/data
 }
 
