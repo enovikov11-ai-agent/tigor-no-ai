@@ -294,6 +294,7 @@
                   options = [
                     "noatime"
                     "nofail"
+                    "nosuid"
                     "x-systemd.device-timeout=1s"
                   ];
                 };
@@ -422,7 +423,7 @@
                     for tagFile in /sys/fs/virtiofs/*/tag; do
                       IFS= read -r path < "$tagFile"
                       mkdir -p -- "$path"
-                      mount -t virtiofs -- "$path" "$path"
+                      mount -t virtiofs -o nosuid -- "$path" "$path"
                     done
                   '';
                 };
