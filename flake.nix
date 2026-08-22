@@ -578,7 +578,7 @@
                 environment.sessionVariables = lib.optionalAttrs vscodium { NIXOS_OZONE_WL = "1"; };
                 environment.shellAliases = lib.optionalAttrs (!vm) {
                   mnt = "zpool import -a && zfs load-key -a && zfs mount -a";
-                  vm-up = "tmux new-session -s hermes 'bash /etc/tigor/vm.sh'";
+                  vm-up = "tmux new-session -s hermes 'bash /etc/tigor/vm.sh; exec bash'";
                   vm-attach = "tmux a -t hermes";
                 }
                 // lib.optionalAttrs (vm) {

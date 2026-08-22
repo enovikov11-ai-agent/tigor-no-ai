@@ -1,6 +1,6 @@
 services:
   vllm:
-    name: vllm
+    container_name: vllm
     image: docker.io/vllm/vllm-openai:nightly
     restart: unless-stopped
     devices:
@@ -32,7 +32,7 @@ services:
       --speculative-config '{"method":"qwen3_next_mtp","num_speculative_tokens":2}'
 
   forgejo:
-    name: forgejo
+    container_name: forgejo
     image: codeberg.org/forgejo/forgejo:16
     restart: unless-stopped
     ports:
@@ -41,17 +41,16 @@ services:
       - /home/nixos/forgejo-data:/data
 
   hermes:
-    name: hermes
+    container_name: hermes
     image: docker.io/nousresearch/hermes-agent
-    userns_mode: "keep-id"
     restart: unless-stopped
     volumes:
       - /home/nixos/.hermes:/opt/data
       - /home/nixos:/home/nixos
       - /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock
     ports:
-      - "8642:8642"   # gateway
-      - "9119:9119"   # dashboard
+      - "8642:8642" # gateway
+      - "9119:9119" # dashboard
     environment:
       HERMES_DASHBOARD: "1"
       DOCKER_HOST: "unix:///run/user/1000/podman/podman.sock"
