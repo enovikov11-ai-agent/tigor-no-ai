@@ -60,7 +60,7 @@ start_passt() {
         --map-guest-addr none \
         --tcp-ports all \
         --udp-ports all &
-    
+
     wait_socket "/run/${VM_NAME}-passt.sock"
 }
 
@@ -71,7 +71,7 @@ start_virtiofsd() {
         --socket-path="/run/${VM_NAME}-internet.sock" \
         --shared-dir=/ssd/internet \
         --readonly &
-    
+
     wait_socket "/run/${VM_NAME}-internet.sock"
 }
 
@@ -86,7 +86,7 @@ run_qemu() {
         -smp 128 \
         -rtc base=utc \
         -drive if=pflash,format=raw,readonly=on,file=/run/libvirt/nix-ovmf/edk2-x86_64-code.fd \
-        -kernel /ssd/vm/vm-r18-rc1-nvda-pods-vsock-BOOTX64.efi \
+        -kernel /ssd/vm/vm-r18-nvda-pods-vsock-BOOTX64.efi \
         -sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny \
         -object rng-random,id=rng,filename=/dev/urandom \
         -device virtio-rng-pci,rng=rng \
