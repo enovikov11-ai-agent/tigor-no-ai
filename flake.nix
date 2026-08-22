@@ -533,6 +533,9 @@
                   };
                 environment.systemPackages =
                   (with pkgs; [
+                    bubblewrap
+                    virt-viewer
+                    spice-gtk
                     curl
                     git
                     htop
