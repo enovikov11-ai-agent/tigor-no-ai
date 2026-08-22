@@ -80,12 +80,16 @@ ls /run/netns
 virsh undefine hermes --nvram
 xsltproc --nonet vm.xsl vm.xsl
 
+podman compose up -d --remove-orphans
+
 ## TODO
 
 ### VM runner
 
-Move hermes to docker
-Harden vm.sh, because it runs as root
+no inet on vllm, forgejo
+
+Bubblewrap vm.sh
+
 Compare qemu command with libvirt command, and research overall security
 
 ### Infra
@@ -107,6 +111,11 @@ Telegram proxy
 Nix copy
 Git clone
 
+### Invariants to check via tests
+
+- VM cannot send or receieve any packages outside of wg tunnel
+- VM cannot execute any code at host, cannot read its memory via DMA on GPU
+
 ### General security
 
 Independent builder
@@ -122,7 +131,6 @@ git scan: commits summary and digest
 userspace VPN
 Secureboot
 Nixos config compartmentalization, less privileged code
-Decide what sec invariants are
 Simplify nix on amount of hidden options, shown via full eval
 Better hash algo: mkpasswd -m yescrypt -R 11
 
