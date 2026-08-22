@@ -59,7 +59,8 @@ start_passt() {
         --map-host-loopback none \
         --map-guest-addr none \
         --tcp-ports all \
-        --udp-ports all &
+        --udp-ports all \
+        -D 8.8.8.8 &
 
     wait_socket "/run/${VM_NAME}-passt.sock"
 }
