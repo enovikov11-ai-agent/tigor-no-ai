@@ -84,6 +84,9 @@ podman compose up -d --remove-orphans
 
 ## TODO
 
+deterministic hermes
+openrouter glm 5.3 fallback/additional
+
 ### VM runner
 
 no inet on vllm, forgejo

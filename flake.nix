@@ -14,7 +14,6 @@
 
       # Public password hash is a tradeoff between usability and security, underlying is high entropy
       yubiSshKey = "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIMltMQTMSIcxPbZLNCxkAT/MWRqJo1IFOfH95OoscQbCAAAABHNzaDo= enovikov11@novikov.local";
-      hermesSshKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICIe5VqCNa+TeVMy/7ap/wEUwQV3yBUebCxyahARktVo root@agents-s-1vcpu-2gb-ams3";
       mainPassword = "$6$JsF575e4YV0MxwGU$aDy3BMHg/5lvWZoMvsAV0TL/BIcXMu3ps1DnOf3.o.hQ3IqT/sfCwKJHdMaaRy2exNAEUFxpxPbO966DE5cm./";
 
       lib = nixpkgs.lib;
@@ -625,7 +624,6 @@
           containers = true;
           vsock = true;
           password = "";
-          authorizedSshKeys = [ yubiSshKey hermesSshKey ];
         };
       };
 
