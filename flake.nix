@@ -322,6 +322,9 @@
                 }
                 // lib.optionalAttrs sudo { wheelNeedsPassword = false; };
 
+                # SecureBoot preparation: enable TPM2 for sbctl
+                security.tpm2.enable = !vm;
+
                 users.mutableUsers = false;
                 users.users = {
                   root = {
@@ -356,6 +359,12 @@
                       "vfio_pci"
                       "vfio"
                       "vfio_iommu_type1"
+                    ]
+                    # SecureBoot: TPM2 modules needed for sbctl to measure and sign UKIs
+                    ++ lib.optionals (!vm) [
+                      "tpm"
+                      "tpm_rng"
+                      "tpm_tis"
                     ]
                     # NVIDIA GeForce GT 710
                     ++ lib.optionals (gnome && !nvidia) [ "nouveau" ];
@@ -557,6 +566,8 @@
                     hdparm
                     ipmitool
                     efibootmgr
+                    sbctl
+                    tpm2-tools
                     e2fsprogs
                     libxslt
                     telegraf
