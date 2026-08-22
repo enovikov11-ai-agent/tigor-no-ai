@@ -20,38 +20,73 @@ vms = {
     },
 }
 
-for name, c in vms.items():
-    ps = f"/run/${{VM_NAME}}-passt.sock"
-    s = f"""#!/usr/bin/env bash
+
+for name, config in vms.items():
+    script = f"""#!/usr/bin/env bash
 set -Eeuo pipefail
 
-VM_NAME="{name}"
+cleanup() {{
+    trap - EXIT INT TERM
 
-cleanup() {{ kill 0 2>/dev/null || true; ip netns del "ns-${{VM_NAME}}" 2>/dev/null || true; }}
+    kill $(jobs -pr) 2>/dev/null || true
+    wait 2>/dev/null || true
+
+    ip netns del ns-{name} 2>/dev/null || true
+}}
+
 trap cleanup EXIT INT TERM
 
-ip netns add "ns-${{VM_NAME}}"
-ip link add "wg-${{VM_NAME}}" type wireguard
-wg setconf "wg-${{VM_NAME}}" "/ssd/vm/ns-wg-${{VM_NAME}}.conf"
-ip link set "wg-${{VM_NAME}}" netns "ns-${{VM_NAME}}"
-ip -n "ns-${{VM_NAME}}" addr add 10.67.69.2/24 dev "wg-${{VM_NAME}}"
-ip -n "ns-${{VM_NAME}}" link set "wg-${{VM_NAME}}" up
-ip -n "ns-${{VM_NAME}}" route add default via 10.67.69.1 dev "wg-${{VM_NAME}}"
+ip netns del "ns-{VM_NAME}" 2>/dev/null || true
+ip link del "wg-{name}" 2>/dev/null || true
 
-rm -f "{ps}"
-ip netns exec "ns-${{VM_NAME}}" passt --foreground --vhost-user \\
-  --socket "{ps}" --repair-path none \\
-  --interface "wg-${{VM_NAME}}" --outbound-if4 "wg-${{VM_NAME}}" \\
-  --ipv4-only --mtu 1420 --address 10.67.69.2 --netmask 24 \\
-  --gateway 10.67.69.1 --no-map-gw --map-host-loopback none \\
-  --map-guest-addr none --tcp-ports all --udp-ports all &
+ip netns add "ns-{name}"
+ip link add "wg-{name}" type wireguard
+wg setconf "wg-{name}" "/ssd/vm/ns-wg-{name}.conf"
+ip link set "wg-{name}" netns "ns-{name}"
 
-for _ in {{1..100}}; do [[ -S "{ps}" ]] && break; sleep 0.01; done
+ip -n "ns-{name}" addr add 10.67.69.2/24 dev "wg-{name}"
+ip -n "ns-{name}" link set "wg-{name}" up
+ip -n "ns-{name}" route add default via 10.67.69.1 dev "wg-{name}"
+
+wait_socket() {{
+    local socket=$1
+
+    for _ in {{1..100}}; do
+        [[ -S "$socket" ]] && return
+        sleep 0.01
+    done
+
+    echo "socket did not appear: $socket" >&2
+    return 1
+}}
+
+rm -f "/run/{name}-passt.sock"
+
+ip netns exec "ns-{name}" passt \
+    --foreground \
+    --vhost-user \
+    --socket "/run/{name}-passt.sock" \
+    --repair-path none \
+    --interface "wg-{name}" \
+    --outbound-if4 "wg-{name}" \
+    --ipv4-only \
+    --mtu 1420 \
+    --address 10.67.69.2 \
+    --netmask 24 \
+    --gateway 10.67.69.1 \
+    --no-map-gw \
+    --map-host-loopback none \
+    --map-guest-addr none \
+    --tcp-ports all \
+    --udp-ports all &
+
+wait_socket "/run/{name}-passt.sock"
 
 """
+
     fs_args = []
     for i, m in enumerate(c["mounts"]):
-        fs = f"/run/${{VM_NAME}}-fs-{i}.sock"
+        fs = f"/run/{name}-fs-{i}.sock"
         ro = " --readonly" if m.get("readonly") else ""
         s += f'rm -f "{fs}"\n'
         s += f'virtiofsd --socket-path="{fs}" --shared-dir={m["src"]}{ro} &\n'
@@ -85,15 +120,11 @@ for _ in {{1..100}}; do [[ -S "{ps}" ]] && break; sleep 0.01; done
   -device vfio-pci,host=0000:41:00.0,iommufd=iommufd0 \\
   -device vfio-pci,host=0000:41:00.1,iommufd=iommufd0 \\
 """
-    s += f"""  -chardev socket,id=net0,path="/run/${{VM_NAME}}-passt.sock" \\
+    s += f"""  -chardev socket,id=net0,path="/run/{name}-passt.sock" \\
   -netdev vhost-user,chardev=net0,id=net \\
   -device virtio-net-pci,netdev=net,mac=52:54:00:a9:f5:da,romfile=,addr=0x0,bus=pcie.{bus} \\
 """
-    for j, a in enumerate(fs_args):
-        if j == len(fs_args) - 1:
-            s += f'  {a}\n'
-        else:
-            s += f'  {a} \\\n'
+
+
     with open(f"{name}.sh", "w") as f:
         f.write(s)
-    print(f"wrote {name}.sh")

@@ -36,8 +36,6 @@ cd /root/mnt/EFI/BOOT/
 mv BOOTX64.efi "$(date '+%Y-%m-%d_%H-%M-%S')_BOOTX64.efi"
 cp /etc/stateless/result/host-*-BOOTX64.efi /root/mnt/EFI/BOOT/BOOTX64.efi
 sync
-cd ~
-umount /root/mnt
 reboot now
 
 diff /etc/stateless/flake.nix /etc/stateless/source.nix
@@ -73,3 +71,7 @@ chmod 777 /run/hermes-passt.sock
 podman load < result
 
 ls /run/netns
+
+tmux new-session -d -s hermes 'bash /etc/stateless/vm.sh'
+tmux attach -t hermes
+tmux new-session -s hermes 'bash /etc/stateless/vm.sh'
