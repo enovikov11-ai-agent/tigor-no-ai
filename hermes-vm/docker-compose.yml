@@ -43,6 +43,7 @@ services:
   hermes:
     name: hermes
     image: docker.io/nousresearch/hermes-agent
+    userns_mode: "keep-id"
     restart: unless-stopped
     volumes:
       - /home/nixos/.hermes:/opt/data

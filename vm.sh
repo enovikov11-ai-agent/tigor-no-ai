@@ -20,7 +20,7 @@ setup_wg() {
 
     ip netns add "ns-${VM_NAME}"
     ip link add "wg-${VM_NAME}" type wireguard
-    wg setconf "wg-${VM_NAME}" "/ssd/vm/ns-wg-${VM_NAME}.conf"
+    wg setconf "wg-${VM_NAME}" "/ssd/vm/hermes/user2.conf"
     ip link set "wg-${VM_NAME}" netns "ns-${VM_NAME}"
 
     ip -n "ns-${VM_NAME}" addr add 10.67.69.2/24 dev "wg-${VM_NAME}"
@@ -65,7 +65,7 @@ start_passt() {
     wait_socket "/run/${VM_NAME}-passt.sock"
 }
 
-start_virtiofsd() {
+start_virtiofsd_0() {
     rm -f "/run/${VM_NAME}-internet.sock"
 
     virtiofsd \
@@ -74,6 +74,16 @@ start_virtiofsd() {
         --readonly &
 
     wait_socket "/run/${VM_NAME}-internet.sock"
+}
+
+start_virtiofsd_1() {
+    rm -f "/run/${VM_NAME}-data.sock"
+
+    virtiofsd \
+        --socket-path="/run/${VM_NAME}-data.sock" \
+        --shared-dir=/ssd/vm/hermes/data &
+
+    wait_socket "/run/${VM_NAME}-data.sock"
 }
 
 run_qemu() {
@@ -95,7 +105,7 @@ run_qemu() {
         -device vhost-vsock-pci,guest-cid=3 \
         -serial stdio \
         -monitor none \
-        -drive file="/ssd/vm/${VM_NAME}.qcow2",if=virtio,format=qcow2,discard=unmap \
+        -drive file="/ssd/vm/hermes/hermes.qcow2",if=virtio,format=qcow2,discard=unmap \
         -object iommufd,id=iommufd0 \
         -device vfio-pci,host=0000:41:00.0,iommufd=iommufd0 \
         -device vfio-pci,host=0000:41:00.1,iommufd=iommufd0 \
@@ -103,10 +113,13 @@ run_qemu() {
         -netdev vhost-user,chardev=net0,id=net \
         -device virtio-net-pci,netdev=net,mac=52:54:00:a9:f5:da,romfile= \
         -chardev socket,id=fs0,path="/run/${VM_NAME}-internet.sock" \
-        -device vhost-user-fs-pci,chardev=fs0,tag=/ssd/internet
+        -device vhost-user-fs-pci,chardev=fs0,tag=/ssd/internet \
+        -chardev socket,id=fs1,path="/run/${VM_NAME}-internet.sock" \
+        -device vhost-user-fs-pci,chardev=fs1,tag=/ssd/vm/hermes/data
 }
 
 setup_wg
 start_passt
-start_virtiofsd
+start_virtiofsd_0
+start_virtiofsd_1
 run_qemu
