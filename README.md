@@ -63,14 +63,18 @@ ls /run/netns
 virsh undefine hermes --nvram
 xsltproc --nonet vm.xsl vm.xsl
 
+chmod 777 /run/user/1000/podman/podman.sock
+
 ## TODO
 
-deterministic hermes
+deterministic hermes / .hermes publish
 openrouter glm 5.3 fallback/additional
 
 ### VM runner
 
-no inet on vllm, forgejo
+vm.sh vnext
+
+caddy http / no inet on vllm, forgejo
 
 Bubblewrap vm.sh
 
@@ -78,7 +82,6 @@ Compare qemu command with libvirt command, and research overall security
 
 ### Infra
 
-.hermes publish
 Download models
 Dflash
 Gpu burn telegraf

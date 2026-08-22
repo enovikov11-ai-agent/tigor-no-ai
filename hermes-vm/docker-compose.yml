@@ -46,7 +46,6 @@ services:
     restart: unless-stopped
     volumes:
       - /home/nixos/.hermes:/opt/data
-      - /home/nixos:/home/nixos
       - /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock
     ports:
       - "9119:9119"
