@@ -99,10 +99,12 @@ Git clone
 
 - VM cannot send or receieve any packages outside of wg tunnel
 - VM cannot execute any code at host, cannot read its memory via DMA on GPU
+- VM cannot login to 10.67.69.1
 
 ### General security
 
 Independent builder
+reject GPG unverified
 
 Nested vm run
 nosuid img mount
@@ -122,6 +124,10 @@ Better hash algo: mkpasswd -m yescrypt -R 11
 
 Dump rtx pro Nvidia chip dump for backup
 SEV ES & nvidia-smi conf-compute -q
+
+### Misc
+
+jetkvm
 
 ### Big ideas maybe to do
 

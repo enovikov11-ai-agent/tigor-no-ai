@@ -14,7 +14,7 @@ services:
       - /home/nixos/vllm-cache:/root/.cache/vllm
     shm_size: 16g
     ports:
-      - "0.0.0.0:8000:8000"
+      - "8000:8000"
     command: >
       /huggingface.co/Qwen/Qwen3.6-27B-FP8
       --served-model-name Qwen3.6-27B-FP8
@@ -36,7 +36,7 @@ services:
     image: codeberg.org/forgejo/forgejo:16
     restart: unless-stopped
     ports:
-      - "0.0.0.0:3000:3000"
+      - "3000:3000"
     volumes:
       - /home/nixos/forgejo-data:/data
 
@@ -49,8 +49,7 @@ services:
       - /home/nixos:/home/nixos
       - /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock
     ports:
-      - "8642:8642" # gateway
-      - "9119:9119" # dashboard
+      - "9119:9119"
     environment:
       HERMES_DASHBOARD: "1"
       DOCKER_HOST: "unix:///run/user/1000/podman/podman.sock"
