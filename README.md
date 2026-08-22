@@ -67,8 +67,7 @@ chmod 777 /run/user/1000/podman/podman.sock
 
 ## TODO
 
-deterministic hermes / .hermes publish
-openrouter glm 5.3 fallback/additional
+.hermes
 
 ### VM runner
 
@@ -84,10 +83,8 @@ Compare qemu command with libvirt command, and research overall security
 
 Download models
 Dflash
-Gpu burn telegraf
+Gpu burn & telegraf
 Pages deployment in my infra
-Wpex & udp punch
-Telegraf: fix host, vm
 Control plane via tg/web
 Cloud init: ssh host key, podman compose up -d, network config
 
@@ -111,13 +108,12 @@ reject GPG unverified
 
 Nested vm run
 nosuid img mount
-gpu reset http://10.67.69.1:3000/hermes/tigor/compare/main...gpu-reset
+gpu reset http://10.67.69.2:3000/hermes/tigor/compare/main...gpu-reset
 
 multiple VMs
 
 git scan: license
 git scan: commits summary and digest
-userspace VPN
 Secureboot
 Nixos config compartmentalization, less privileged code
 Simplify nix on amount of hidden options, shown via full eval
@@ -130,6 +126,7 @@ SEV ES & nvidia-smi conf-compute -q
 
 ### Misc
 
+openrouter glm 5.3 fallback/additional
 jetkvm
 
 ### Big ideas maybe to do
