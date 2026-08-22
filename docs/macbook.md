@@ -14,47 +14,97 @@ pip3 install PyYAML requests ipykernel --break-system-packages
 
 brew install miniserve
 
-## PGP
+## GPG + YubiKey
 
 brew install gnupg pinentry-mac ykman
 
+# Verify YubiKey detected
 ykman info
 gpg --card-status
 
+# Prepare YubiKey (repeat for each of 2 keys: daily + backup)
 gpg --card-edit
-
-admin
-generate
+# admin → kdf-setup → max-pin-trials 10 → quit
 
 ykman openpgp access change-pin
 ykman openpgp access change-admin-pin
 
+# Touch: sig=always, enc+auth=cached (touch once per 15s session)
 ykman openpgp keys set-touch sig on
+ykman openpgp keys set-touch enc cached
+ykman openpgp keys set-touch aut cached
 
-tigor-git-sign <tigor@tgr.rs>
+# Key attributes: Ed25519 / Curve25519 (firmware ≥ 5.2)
+gpg --card-edit
+# admin → key-attr → 9 → 16 (Ed25519 for sig)
+# → 9 → 18 (Curve 25519 for enc)
+# → 9 → 16 (Ed25519 for auth) → quit
 
-echo "pinentry-program $(which pinentry-mac)" >> ~/.gnupg/gpg-agent.conf
+# Generate primary key (offline/Tails) — Certify only, Curve 25519
+gpg --expert --full-gen-key
+# (11) ECC custom → Certify only → (1) Curve 25519 → 0 expiry
 
-gpgconf --kill gpg-agent
+# Add subkeys
+gpg --expert --edit-key YOUR_KEY_ID
+# addkey → (10) sign only → Curve 25519 → 2y
+# addkey → (12) encrypt only → Curve 25519 → 2y
+# addkey → (11) custom → Auth only → Curve 25519 → 2y
+# save
 
-pub rsa2048/4D98D893317CA780
+# Backup BEFORE keytocard
+gpg --export-secret-keys --armor YOUR_KEY_ID > master-backup.asc
+gpg --export-secret-subkeys --armor YOUR_KEY_ID > subkeys-backup.asc
+gpg --export --armor YOUR_KEY_ID > public-key.asc
 
-gpg --list-keys --keyid-format long
+# Move subkeys to YubiKey
+gpg --edit-key YOUR_KEY_ID
+# keytocard → 1 (sign) → keytocard → 2 (encrypt) → keytocard → 3 (auth)
+# quit (NOT save)
 
-git config user.signingkey 4D98D893317CA780
-git config commit.gpgsign true
-git config gpg.program gpg
+# Verify
+gpg -K --keyid-format long  # subkeys show ssb>
+ykman openpgp info
 
-gpg --armor --export 4D98D893317CA780 | pbcopy
+# — Daily Mac setup —
 
-git config user.email tigor@tgr.rs
+gpg --import public-key.asc
+gpg --edit-key YOUR_KEY_ID
+# trust → 5 → quit
 
-~/.gnupg/gpg-agent.conf
+cat >> ~/.gnupg/gpg-agent.conf <<'EOF'
 pinentry-program /opt/homebrew/bin/pinentry-mac
+enable-ssh-support
 default-cache-ttl 86400
 max-cache-ttl 86400
-
+EOF
 gpgconf --kill gpg-agent
+
+# SSH via gpg-agent — extract auth keygrip
+gpg --with-keygrip -K | awk '/\[auth\]/{getline; print $NF}' > ~/.gnupg/sshcontrol
+
+echo 'export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)' >> ~/.zshrc
+echo 'gpgconf --launch gpg-agent' >> ~/.zshrc
+
+ssh-add -L  # → add to servers / GitHub
+
+# Git signing — extract sign subkey
+gpg -K --with-colons --keyid-format 0xlong YOUR_KEY_ID | awk -F: '/^ssb/ && $11 ~ /s/ {print $5; exit}'
+
+git config --global user.signingkey YOUR_SIGN_SUBKEY
+git config --global commit.gpgsign true
+git config --global gpg.program gpg
+
+# Public key → GitHub → Settings → SSH and GPG keys
+gpg --armor --export YOUR_KEY_ID | pbcopy
+
+# Publish
+gpg --keyserver keys.openpgp.org --send-keys YOUR_KEY_ID
+
+# — New machine —
+brew install gnupg pinentry-mac ykman
+gpg --import public-key.asc
+# trust 5 → quit
+# same gpg-agent.conf, sshcontrol, zshrc as above
 
 ## screenshots
 
