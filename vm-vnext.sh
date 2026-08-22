@@ -39,17 +39,12 @@ vm_setup_wireguard() {
 
     ip netns add "ns-${vm_name}"
     ip link add "wg-${vm_name}" type wireguard
-    wg setconf "wg-${vm_name}" "/ssd/vm/ns-wg-${vm_name}.conf"
+    wg setconf "wg-${vm_name}" "/ssd/vm/ns-${vm_name}.conf"
     ip link set "wg-${vm_name}" netns "ns-${vm_name}"
 
     ip -n "ns-${vm_name}" addr add 10.67.69.2/24 dev "wg-${vm_name}"
     ip -n "ns-${vm_name}" link set "wg-${vm_name}" up
     ip -n "ns-${vm_name}" route add default via 10.67.69.1 dev "wg-${vm_name}"
-    # If passt becomes a real unprivileged host UID while keeping
-    # --tcp-ports all/--udp-ports all, consider setting inside this netns:
-    #   sysctl -w net.ipv4.ip_unprivileged_port_start=0
-    # This avoids CAP_NET_BIND_SERVICE solely for ports <1024. If "all" inbound
-    # ports are not intentional, prefer an explicit port allowlist.
 }
 
 # --- Helpers ---
@@ -70,21 +65,34 @@ vm_wait_socket() {
     return 1
 }
 
+# --- Bubblewrap sandbox ---
+# Shared bwrap baseline: --unshare-all --cap-drop ALL --die-with-parent
+# --new-session --clearenv. NixOS runtime closure and exact binds per-program.
+
+_bwrap_base=()
+_bwrap_base+=(
+    --unshare-all
+    --cap-drop ALL
+    --die-with-parent
+    --new-session
+    --clearenv
+    --ro-bind /nix/store /nix/store
+)
+
 # --- passt (vhost-user networking) ---
 
 vm_add_passt() {
     rm -f "$vm_socket"
-    # Suggested passt boundary:
-    #   root prepares ns-${vm_name}/wg-${vm_name}; then setpriv to a dedicated
-    #   passt UID/GID (no supplementary groups), then enter bwrap.
-    #   bwrap: --unshare-all --share-net --cap-drop ALL --die-with-parent
-    #          --new-session --clearenv + exact RO runtime and socket-dir binds.
-    # --share-net is intentional: passt needs the already-prepared WG netns.
-    # Do not --disable-userns if relying on passt's own nested userns sandbox.
-    # Prefer a private /run/tigor-vm/${vm_name}/passt/ socket directory whose
-    # access is limited to passt and the QEMU identity/group.
+    # passt needs the host network namespace (--share-net) to use the prepared
+    # WireGuard interface. Binds: /proc, runtime closure, socket dir, passt bin.
 
-    ip netns exec "ns-${vm_name}" passt \
+    ip netns exec "ns-${vm_name}" bwrap "${_bwrap_base[@]}" \
+        --share-net \
+        --dev-bind /dev /dev \
+        --ro-bind /proc /proc \
+        --bind "$(dirname "$vm_socket")" "$(dirname "$vm_socket")" \
+        --ro-bind "$(which passt)" "$(which passt)" \
+        passt \
         --foreground \
         --vhost-user \
         --socket "$vm_socket" \
@@ -116,21 +124,25 @@ vm_add_passt() {
 
 vm_add_virtiofsd() {
     rm -f "$vm_socket"
-    # Run virtiofsd as the *real host UID/GID* whose normal DAC/ACL access is
-    # intended to bound the guest. Drop root before bwrap; avoid CAP_DAC_OVERRIDE
-    # and CAP_DAC_READ_SEARCH. A dedicated per-VM/share UID + ACL is tighter.
-    # With bwrap as the outer filesystem/namespace jail, use an exact bind of
-    # vm_src and a private socket directory; for vm_ro make the bwrap bind RO as
-    # well as using virtiofsd --readonly, so the mount itself denies writes.
-    # Consider --inode-file-handles=never to avoid CAP_DAC_READ_SEARCH.
-    # Current virtiofsd supports non-root + --sandbox=none while retaining its
-    # separate seccomp policy. If keeping virtiofsd's namespace sandbox instead,
-    # do not disable nested userns creation and test UID/GID translation.
+    # virtiofsd only needs its shared dir, a socket to listen on, and /proc.
+    # RO binds for shared sources; RW only for writable shares.
+
+    _virtiofsd_bin="$(which virtiofsd)"
 
     if ((vm_ro)); then
-        virtiofsd --socket-path="$vm_socket" --shared-dir="$vm_src" --readonly &
+        bwrap "${_bwrap_base[@]}" \
+            --ro-bind "$vm_src" "$vm_src" \
+            --bind "$(dirname "$vm_socket")" "$(dirname "$vm_socket")" \
+            --ro-bind /proc /proc \
+            --ro-bind "$_virtiofsd_bin" "$_virtiofsd_bin" \
+            virtiofsd --socket-path="$vm_socket" --shared-dir="$vm_src" --readonly &
     else
-        virtiofsd --socket-path="$vm_socket" --shared-dir="$vm_src" &
+        bwrap "${_bwrap_base[@]}" \
+            --bind "$vm_src" "$vm_src" \
+            --bind "$(dirname "$vm_socket")" "$(dirname "$vm_socket")" \
+            --ro-bind /proc /proc \
+            --ro-bind "$_virtiofsd_bin" "$_virtiofsd_bin" \
+            virtiofsd --socket-path="$vm_socket" --shared-dir="$vm_src" &
     fi
     vm_track_pid
 
@@ -144,18 +156,22 @@ vm_add_virtiofsd() {
 # --- QEMU ---
 
 vm_run_qemu() {
-    # QEMU should get the strongest profile: dedicated real qemu UID/GID, then
-    # bwrap --unshare-all --unshare-user --unshare-cgroup --disable-userns
-    # --cap-drop ALL --die-with-parent --new-session --clearenv.
-    # Keep bwrap's empty network namespace: QEMU only needs AF_UNIX to passt.
-    # Bind only qcow2, kernel/firmware, helper sockets, runtime closure and exact
-    # device authority. Avoid exposing host /, /sys or broad /dev trees.
-    # Stronger VFIO/iommufd option: privileged launcher pre-opens /dev/iommu and
-    # exact VFIO cdevs, then QEMU uses iommufd fd=N and vfio-pci fd=M. That makes
-    # each inherited FD the device capability instead of pathname access.
-    # 1G hugetlb memfd under unprivileged QEMU may need vm.hugetlb_shm_group;
-    # prefer group membership over retaining CAP_IPC_LOCK.
-    qemu-system-x86_64 \
+    # QEMU gets the tightest bwrap profile: no network namespace (AF_UNIX only),
+    # exact device nodes for KVM/VFIO/IOMMU, disk image, kernel, firmware, and
+    # helper sockets. /dev is not exposed broadly — only specific nodes.
+
+    bwrap "${_bwrap_base[@]}" \
+        --dev-bind /dev/kvm /dev/kvm \
+        --dev-bind /dev/urandom /dev/urandom \
+        --dev-bind /dev/iommu /dev/iommu \
+        --dev-bind /dev/vfio/vfio /dev/vfio/vfio \
+        --dev-bind "/dev/vfio/$(ls /dev/vfio/ | grep -v vfio)" "/dev/vfio/$(ls /dev/vfio/ | grep -v vfio)" \
+        --ro-bind "/ssd/vm/${vm_name}.qcow2" "/ssd/vm/${vm_name}.qcow2" \
+        --ro-bind /run/libvirt/nix-ovmf/edk2-x86_64-code.fd /run/libvirt/nix-ovmf/edk2-x86_64-code.fd \
+        --ro-bind /ssd/vm/vm-r37-nvda-pods-vsock-BOOTX64.efi /ssd/vm/vm-r37-nvda-pods-vsock-BOOTX64.efi \
+        --bind /run /run \
+        --ro-bind "$(which qemu-system-x86_64)" "$(which qemu-system-x86_64)" \
+        qemu-system-x86_64 \
         -nodefaults \
         -no-user-config \
         -machine pc-q35-10.2,memory-backend=ram,usb=off,vmport=off,smm=off,dump-guest-core=off \
