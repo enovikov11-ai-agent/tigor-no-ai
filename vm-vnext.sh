@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+# Sandbox/hardening direction (comments only; not implemented below):
+# - Keep the privileged launcher for netns/WireGuard/VFIO setup, but run passt,
+#   virtiofsd and QEMU under dedicated *real host* UIDs before entering bwrap.
+# - bwrap starts with an empty mount namespace/root: prefer exact
+#   --ro-bind/--bind/--dev-bind allowances instead of --ro-bind / / + masking.
+# - Useful flags where compatible: --die-with-parent --new-session --clearenv
+#   --cap-drop ALL. --unshare-all is a good baseline, but user/cgroup use "try"
+#   semantics; add explicit --unshare-user/--unshare-cgroup if failure must fail.
+# - On NixOS, --ro-bind /nix/store /nix/store is a convenient initial runtime
+#   closure; tighter per-program store closures can come later if worthwhile.
+# - Treat inherited FDs as sandbox capabilities: use CLOEXEC for unrelated FDs
+#   and audit /proc/$pid/fd for every guest-facing child after startup.
 
 vm_cleanup() {
     trap - EXIT INT TERM
@@ -22,6 +34,11 @@ vm_setup_wireguard() {
     ip -n "ns-${vm_name}" addr add 10.67.69.2/24 dev "wg-${vm_name}"
     ip -n "ns-${vm_name}" link set "wg-${vm_name}" up
     ip -n "ns-${vm_name}" route add default via 10.67.69.1 dev "wg-${vm_name}"
+    # If passt becomes a real unprivileged host UID while keeping
+    # --tcp-ports all/--udp-ports all, consider setting inside this netns:
+    #   sysctl -w net.ipv4.ip_unprivileged_port_start=0
+    # This avoids CAP_NET_BIND_SERVICE solely for ports <1024. If "all" inbound
+    # ports are not intentional, prefer an explicit port allowlist.
 }
 
 vm_wait_socket() {
@@ -36,6 +53,15 @@ vm_wait_socket() {
 
 vm_add_passt() {
     rm -f "$vm_socket"
+    # Suggested passt boundary:
+    #   root prepares ns-${vm_name}/wg-${vm_name}; then setpriv to a dedicated
+    #   passt UID/GID (no supplementary groups), then enter bwrap.
+    #   bwrap: --unshare-all --share-net --cap-drop ALL --die-with-parent
+    #          --new-session --clearenv + exact RO runtime and socket-dir binds.
+    # --share-net is intentional: passt needs the already-prepared WG netns.
+    # Do not --disable-userns if relying on passt's own nested userns sandbox.
+    # Prefer a private /run/tigor-vm/${vm_name}/passt/ socket directory whose
+    # access is limited to passt and the QEMU identity/group.
 
     ip netns exec "ns-${vm_name}" passt \
         --foreground \
@@ -66,6 +92,16 @@ vm_add_passt() {
 
 vm_add_virtiofsd() {
     rm -f "$vm_socket"
+    # Run virtiofsd as the *real host UID/GID* whose normal DAC/ACL access is
+    # intended to bound the guest. Drop root before bwrap; avoid CAP_DAC_OVERRIDE
+    # and CAP_DAC_READ_SEARCH. A dedicated per-VM/share UID + ACL is tighter.
+    # With bwrap as the outer filesystem/namespace jail, use an exact bind of
+    # vm_src and a private socket directory; for vm_ro make the bwrap bind RO as
+    # well as using virtiofsd --readonly, so the mount itself denies writes.
+    # Consider --inode-file-handles=never to avoid CAP_DAC_READ_SEARCH.
+    # Current virtiofsd supports non-root + --sandbox=none while retaining its
+    # separate seccomp policy. If keeping virtiofsd's namespace sandbox instead,
+    # do not disable nested userns creation and test UID/GID translation.
 
     if ((vm_ro)); then
         virtiofsd --socket-path="$vm_socket" --shared-dir="$vm_src" --readonly &
@@ -74,6 +110,8 @@ vm_add_virtiofsd() {
     fi
 
     vm_wait_socket
+    # NOTE: ${id} is consumed below with set -u enabled; each caller must set a
+    # unique id before vm_add_virtiofsd or the script aborts here.
     vm_args+=(
         -chardev "socket,id=${id},path=${vm_socket}"
         -device "vhost-user-fs-pci,chardev=${id},tag=${vm_dst}"
@@ -81,6 +119,17 @@ vm_add_virtiofsd() {
 }
 
 vm_run_qemu() {
+    # QEMU should get the strongest profile: dedicated real qemu UID/GID, then
+    # bwrap --unshare-all --unshare-user --unshare-cgroup --disable-userns
+    # --cap-drop ALL --die-with-parent --new-session --clearenv.
+    # Keep bwrap's empty network namespace: QEMU only needs AF_UNIX to passt.
+    # Bind only qcow2, kernel/firmware, helper sockets, runtime closure and exact
+    # device authority. Avoid exposing host /, /sys or broad /dev trees.
+    # Stronger VFIO/iommufd option: privileged launcher pre-opens /dev/iommu and
+    # exact VFIO cdevs, then QEMU uses iommufd fd=N and vfio-pci fd=M. That makes
+    # each inherited FD the device capability instead of pathname access.
+    # 1G hugetlb memfd under unprivileged QEMU may need vm.hugetlb_shm_group;
+    # prefer group membership over retaining CAP_IPC_LOCK.
     qemu-system-x86_64 \
         -nodefaults \
         -no-user-config \
@@ -112,6 +161,9 @@ vm_start_hermes() {
     trap vm_cleanup EXIT INT TERM
 
     vm_args=()
+    # Prefer /run/tigor-vm/${vm_name}/ with separate helper subdirectories and
+    # ownership. QEMU only needs search/connect access; helpers should not share
+    # one writable socket directory.
     vm_kernel="/ssd/vm/vm-r37-nvda-pods-vsock-BOOTX64.efi"
     vm_disk="/ssd/vm/hermes.qcow2"
     vm_cpu="128"
@@ -119,6 +171,8 @@ vm_start_hermes() {
     vm_gpu="1"
     vm_vsock="1"
     vm_ui="1"
+    # NOTE: vm_kernel/vm_disk/vm_cpu/vm_ram/... above are currently not consumed
+    # by vm_run_qemu, which still hardcodes the corresponding QEMU arguments.
 
     vm_setup_wireguard
     vm_mac="52:54:00:a9:f5:da" vm_socket="/run/${vm_name}-passt.sock" vm_add_passt
@@ -127,6 +181,9 @@ vm_start_hermes() {
     vm_src="/hdd/internet/wikipedia" vm_dst="/hdd/internet/wikipedia" vm_ro="1" vm_socket="/run/${vm_name}-wiki.sock" vm_add_virtiofsd
     vm_src="/ssd/vm/hermes" vm_dst="/ssd/vm/hermes" vm_ro="0" vm_socket="/run/${vm_name}-hermes.sock" vm_add_virtiofsd
     vm_src="/ssd/telegraf/hermes" vm_dst="/ssd/telegraf/host" vm_ro="0" vm_socket="/run/${vm_name}-telegraf.sock" vm_add_virtiofsd
+    # vm_wait_socket proves only that the pathname became a socket. Consider
+    # retaining each helper PID and failing if it exits before/while QEMU starts;
+    # cleanup can then kill known PIDs instead of every background shell job.
     vm_run_qemu
 
     vm_cleanup
