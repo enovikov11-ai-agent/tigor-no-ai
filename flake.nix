@@ -1,15 +1,15 @@
 {
-  description = "Stateless NixOS host and diskless UKI guest images";
+  description = "Tigor no AI Monorepo";
 
   inputs = {
-    # 2026-08-14 https://github.com/NixOS/nixpkgs/commits/nixos-26.05/
-    nixpkgs.url = "github:NixOS/nixpkgs/02e08985a27c65ffd33d434eeb2e660a2e4dc84d";
+    # 2026-08-20 https://github.com/NixOS/nixpkgs/commits/nixos-26.05/
+    nixpkgs.url = "github:NixOS/nixpkgs/5880666fd9eb563038431edb35c2d0aa595884e6";
   };
 
   outputs =
     { self, nixpkgs, ... }:
     let
-      # For release candidates use r5-rc1 format
+      # Number of a commit in a repo, r37 = 37th commit in tigor-no-ai
       revision = "r37";
 
       # Public password hash is a tradeoff between usability and security, underlying is high entropy
@@ -476,7 +476,7 @@
 
                 systemd.tmpfiles.rules =
                   [ "w /sys/kernel/mm/transparent_hugepage/defrag - - - - defer" ]
-                  ++ lib.optionals (!vm) [ "d /etc/stateless 0775 root libvirtd -" ];
+                  ++ lib.optionals (!vm) [ "d /etc/tigor 0775 root libvirtd -" ];
                 systemd.targets.sleep.enable = false;
                 systemd.targets.suspend.enable = false;
                 systemd.targets.hibernate.enable = false;
@@ -506,24 +506,24 @@
                         rotation_max_archives = 3
                         data_format = "influx"
                     '';
-                    "stateless/flake.nix.bak".source = ./flake.nix;
-                    "stateless/flake.nix" = {
+                    "tigor/flake.nix.bak".source = ./flake.nix;
+                    "tigor/flake.nix" = {
                       source = ./flake.nix;
                       mode = "0644";
                     };
                   }
                   // lib.optionalAttrs (!vm) {
-                    "stateless/vm.xsl.bak".source = ./vm.xsl;
-                    "stateless/vm.xsl" = {
+                    "tigor/vm.xsl.bak".source = ./vm.xsl;
+                    "tigor/vm.xsl" = {
                       source = ./vm.xsl;
                       mode = "0644";
                     };
-                    "stateless/vm.sh.bak".source = ./vm.sh;
-                    "stateless/vm.sh" = {
+                    "tigor/vm.sh.bak".source = ./vm.sh;
+                    "tigor/vm.sh" = {
                       source = ./vm.sh;
                       mode = "0644";
                     };
-                    "stateless/ssh_host_ed25519_key" = {
+                    "tigor/ssh_host_ed25519_key" = {
                       source = ./ssh_host_ed25519_key;
                       mode = "0600";
                     };
@@ -578,13 +578,7 @@
                 environment.sessionVariables = lib.optionalAttrs vscodium { NIXOS_OZONE_WL = "1"; };
                 environment.shellAliases = lib.optionalAttrs (!vm) {
                   mnt = "zpool import -a && zfs load-key -a && zfs mount -a";
-                  vm-gen = "cd /etc/stateless && xsltproc --nonet vm.xsl vm.xsl";
-                  vm-list = "virsh list --all";
                 };
-                environment.interactiveShellInit = lib.optionalString (!vm) ''
-                  vm-start() { virsh define "/etc/stateless/$1.xml" && virsh start "$1"; }
-                  vm-stop() { virsh shutdown "$1" && virsh undefine "$1" --nvram; }
-                '';
                 systemd.services.telegraf = {
                   description = "Telegraf metrics collector";
                   wantedBy = [ "multi-user.target" ];
