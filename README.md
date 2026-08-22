@@ -28,12 +28,6 @@ echo -e '\a'
 
 sync && reboot now
 
-## Run
-
-tmux new-session -d -s hermes 'bash /etc/tigor/vm.sh'
-tmux new-session -s hermes 'bash /etc/tigor/vm.sh'
-tmux a -t hermes
-
 ## Code
 
 find . -type f -exec sha256sum {} +
@@ -48,17 +42,10 @@ qemu-img create -f qcow2 /ssd/vm/hermes.qcow2 500G
 mkfs.ext4 -L data /dev/vda
 chown -R nixos:users /home/nixos
 
-nix build .#host
 nixos-rebuild switch --flake .#vm --override flake.nix '{ modules = [{ networking.firewall.enable = true; }]; }'
 
-apt install wireguard-tools
-ufw allow 2026/udp
-wg-quick up ./wg-hermes.conf
-
 sshfs nixos@10.67.69.2:/home/nixos /home/nixos -o Port=2222,reconnect
-
 echo o > /proc/sysrq-trigger
-
 nft flush ruleset
 
 codeberg.org/forgejo/forgejo:16
@@ -71,16 +58,10 @@ chown -R nixos:users .
 find . -type d -exec chmod 2775 {} +
 find . -type f -exec chmod 664 {} +
 
-chmod 777 /run/hermes-passt.sock
-
 podman load < result
-
 ls /run/netns
-
 virsh undefine hermes --nvram
 xsltproc --nonet vm.xsl vm.xsl
-
-podman compose up -d --remove-orphans
 
 ## TODO
 

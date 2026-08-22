@@ -578,6 +578,11 @@
                 environment.sessionVariables = lib.optionalAttrs vscodium { NIXOS_OZONE_WL = "1"; };
                 environment.shellAliases = lib.optionalAttrs (!vm) {
                   mnt = "zpool import -a && zfs load-key -a && zfs mount -a";
+                  vm-up = "tmux new-session -s hermes 'bash /etc/tigor/vm.sh'";
+                  vm-attach = "tmux a -t hermes";
+                }
+                // lib.optionalAttrs (vm) {
+                  pod = "podman compose up -d --remove-orphans";
                 };
                 systemd.services.telegraf = {
                   description = "Telegraf metrics collector";
