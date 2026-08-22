@@ -172,6 +172,7 @@
       containersModule = { pkgs, ... }: {
         virtualisation.podman = {
           enable = true;
+          dockerCompat = true;
           extraRuntimes = [ pkgs.gvisor ];
         };
         environment.systemPackages = with pkgs; [

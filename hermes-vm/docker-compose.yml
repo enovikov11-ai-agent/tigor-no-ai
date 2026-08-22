@@ -46,9 +46,12 @@ services:
     restart: unless-stopped
     volumes:
       - /home/nixos/.hermes:/opt/data
-  ports:
-    - "8642:8642"   # gateway
-    - "9119:9119"   # dashboard
-  environment:
-    HERMES_DASHBOARD: "1"
+      - /home/nixos:/home/nixos
+      - /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock
+    ports:
+      - "8642:8642"   # gateway
+      - "9119:9119"   # dashboard
+    environment:
+      HERMES_DASHBOARD: "1"
+      DOCKER_HOST: "unix:///run/user/1000/podman/podman.sock"
     command: ["gateway", "run"]
