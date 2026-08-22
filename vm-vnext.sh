@@ -13,14 +13,25 @@ set -Eeuo pipefail
 # - Treat inherited FDs as sandbox capabilities: use CLOEXEC for unrelated FDs
 #   and audit /proc/$pid/fd for every guest-facing child after startup.
 
+# --- Prerequisites ---
+
+if [[ $EUID -ne 0 ]]; then
+    echo "ERROR: this script must be run as root" >&2
+    exit 1
+fi
+
+# --- Cleanup ---
+
 vm_cleanup() {
     trap - EXIT INT TERM
 
-    kill $(jobs -pr) 2>/dev/null || true
+    kill ${vm_pids[@]+"${vm_pids[@]}"} 2>/dev/null || true
     wait 2>/dev/null || true
 
     ip netns del "ns-${vm_name}" 2>/dev/null || true
 }
+
+# --- WireGuard / network namespace ---
 
 vm_setup_wireguard() {
     ip netns del "ns-${vm_name}" 2>/dev/null || true
@@ -41,15 +52,25 @@ vm_setup_wireguard() {
     # ports are not intentional, prefer an explicit port allowlist.
 }
 
+# --- Helpers ---
+
+vm_pids=()
+
+vm_track_pid() {
+    vm_pids+=($!)
+}
+
 vm_wait_socket() {
-    for _ in {1..100}; do
+    for _ in {1..500}; do
         [[ -S "$vm_socket" ]] && return
         sleep 0.01
     done
 
-    echo "Socket did not appear: $vm_socket" >&2
+    echo "ERROR: socket did not appear: $vm_socket" >&2
     return 1
 }
+
+# --- passt (vhost-user networking) ---
 
 vm_add_passt() {
     rm -f "$vm_socket"
@@ -81,6 +102,7 @@ vm_add_passt() {
         --map-guest-addr none \
         --tcp-ports all \
         --udp-ports all &
+    vm_track_pid
 
     vm_wait_socket
     vm_args+=(
@@ -89,6 +111,8 @@ vm_add_passt() {
         -device "virtio-net-pci,netdev=net,mac=${vm_mac},romfile="
     )
 }
+
+# --- virtiofsd (shared filesystem) ---
 
 vm_add_virtiofsd() {
     rm -f "$vm_socket"
@@ -108,15 +132,16 @@ vm_add_virtiofsd() {
     else
         virtiofsd --socket-path="$vm_socket" --shared-dir="$vm_src" &
     fi
+    vm_track_pid
 
     vm_wait_socket
-    # NOTE: ${id} is consumed below with set -u enabled; each caller must set a
-    # unique id before vm_add_virtiofsd or the script aborts here.
     vm_args+=(
         -chardev "socket,id=${id},path=${vm_socket}"
         -device "vhost-user-fs-pci,chardev=${id},tag=${vm_dst}"
     )
 }
+
+# --- QEMU ---
 
 vm_run_qemu() {
     # QEMU should get the strongest profile: dedicated real qemu UID/GID, then
@@ -152,18 +177,18 @@ vm_run_qemu() {
         -object iommufd,id=iommufd0 \
         -device vfio-pci,host=0000:41:00.0,iommufd=iommufd0 \
         -device vfio-pci,host=0000:41:00.1,iommufd=iommufd0 \
-        "${vm_args[@]}"
+        ${vm_args[@]+"${vm_args[@]}"}}
 }
+
+# --- Entry point ---
 
 vm_start_hermes() {
     vm_name="hermes"
+    vm_pids=()
 
     trap vm_cleanup EXIT INT TERM
 
     vm_args=()
-    # Prefer /run/tigor-vm/${vm_name}/ with separate helper subdirectories and
-    # ownership. QEMU only needs search/connect access; helpers should not share
-    # one writable socket directory.
     vm_kernel="/ssd/vm/vm-r37-nvda-pods-vsock-BOOTX64.efi"
     vm_disk="/ssd/vm/hermes.qcow2"
     vm_cpu="128"
@@ -176,11 +201,11 @@ vm_start_hermes() {
 
     vm_setup_wireguard
     vm_mac="52:54:00:a9:f5:da" vm_socket="/run/${vm_name}-passt.sock" vm_add_passt
-    vm_src="/ssd/internet" vm_dst="/ssd/internet" vm_ro="1" vm_socket="/run/${vm_name}-internet.sock" vm_add_virtiofsd
-    vm_src="/hdd/internet/kiwix" vm_dst="/hdd/internet/kiwix" vm_ro="1" vm_socket="/run/${vm_name}-kiwix.sock" vm_add_virtiofsd
-    vm_src="/hdd/internet/wikipedia" vm_dst="/hdd/internet/wikipedia" vm_ro="1" vm_socket="/run/${vm_name}-wiki.sock" vm_add_virtiofsd
-    vm_src="/ssd/vm/hermes" vm_dst="/ssd/vm/hermes" vm_ro="0" vm_socket="/run/${vm_name}-hermes.sock" vm_add_virtiofsd
-    vm_src="/ssd/telegraf/hermes" vm_dst="/ssd/telegraf/host" vm_ro="0" vm_socket="/run/${vm_name}-telegraf.sock" vm_add_virtiofsd
+    id="fs-internet"  vm_src="/ssd/internet"         vm_dst="/ssd/internet"         vm_ro="1" vm_socket="/run/${vm_name}-internet.sock"  vm_add_virtiofsd
+    id="fs-kiwix"     vm_src="/hdd/internet/kiwix"   vm_dst="/hdd/internet/kiwix"   vm_ro="1" vm_socket="/run/${vm_name}-kiwix.sock"     vm_add_virtiofsd
+    id="fs-wiki"      vm_src="/hdd/internet/wikipedia" vm_dst="/hdd/internet/wikipedia" vm_ro="1" vm_socket="/run/${vm_name}-wiki.sock" vm_add_virtiofsd
+    id="fs-hermes"    vm_src="/ssd/vm/hermes"        vm_dst="/ssd/vm/hermes"        vm_ro="0" vm_socket="/run/${vm_name}-hermes.sock"    vm_add_virtiofsd
+    id="fs-telegraf"  vm_src="/ssd/telegraf/hermes"  vm_dst="/ssd/telegraf/host"    vm_ro="0" vm_socket="/run/${vm_name}-telegraf.sock"  vm_add_virtiofsd
     # vm_wait_socket proves only that the pathname became a socket. Consider
     # retaining each helper PID and failing if it exits before/while QEMU starts;
     # cleanup can then kill known PIDs instead of every background shell job.
