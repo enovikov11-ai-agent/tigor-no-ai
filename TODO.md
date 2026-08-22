@@ -1,8 +1,6 @@
 # VM runner
 
-qemu-system-x86_64: warning: IOMMU_IOAS_MAP failed: Bad address, PCI BAR?
-
-Make VM have full inet; Move hermes to docker
+Move hermes to docker
 Harden vm.sh, because it runs as root
 Compare qemu command with libvirt command, and research overall security
 

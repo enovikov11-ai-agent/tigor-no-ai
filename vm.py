@@ -4,7 +4,7 @@ vms = {
     "hermes": {
         "cpu": 64,
         "ram": 128,
-        "kernel": "/ssd/vm/vm-r17-nvda-pods-vsock-BOOTX64.efi",
+        "kernel": "/ssd/vm/vm-r37-nvda-pods-vsock-BOOTX64.efi",
         "gpu": True,
         "vsock": True,
         "ui": True,
