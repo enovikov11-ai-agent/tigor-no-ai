@@ -61,8 +61,8 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - /root/pages-data/repo:/srv/repo:ro
-      - /root/pages-data/caddy-data:/data
-      - /root/pages-data/caddy-config:/config
+      - /home/nixos/Caddyfile:/etc/caddy/Caddyfile
+      - /home/nixos/pages-data/repo:/srv/repo:ro
+      - /home/nixos/pages-data/caddy-data:/data
+      - /home/nixos/pages-data/caddy-config:/config
     restart: unless-stopped

@@ -1,4 +1,4 @@
-pages.tgr.rs:443 {
+pages.ai.tgr.rs:443 {
     root * /srv/repo
     encode gzip
 
