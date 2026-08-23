@@ -176,11 +176,11 @@ vm_start_hermes() {
 
     vm_setup_wireguard
     vm_mac="52:54:00:a9:f5:da" vm_socket="/run/${vm_name}-passt.sock" vm_add_passt
-    vm_src="/ssd/internet" vm_dst="/ssd/internet" vm_ro="1" vm_socket="/run/${vm_name}-internet.sock" vm_add_virtiofsd
-    vm_src="/hdd/internet/kiwix" vm_dst="/hdd/internet/kiwix" vm_ro="1" vm_socket="/run/${vm_name}-kiwix.sock" vm_add_virtiofsd
-    vm_src="/hdd/internet/wikipedia" vm_dst="/hdd/internet/wikipedia" vm_ro="1" vm_socket="/run/${vm_name}-wiki.sock" vm_add_virtiofsd
-    vm_src="/ssd/vm/hermes" vm_dst="/ssd/vm/hermes" vm_ro="0" vm_socket="/run/${vm_name}-hermes.sock" vm_add_virtiofsd
-    vm_src="/ssd/telegraf/hermes" vm_dst="/ssd/telegraf/host" vm_ro="0" vm_socket="/run/${vm_name}-telegraf.sock" vm_add_virtiofsd
+    id="fs-internet" vm_src="/ssd/internet" vm_dst="/ssd/internet" vm_ro="1" vm_socket="/run/${vm_name}-internet.sock" vm_add_virtiofsd
+    id="fs-kiwix" vm_src="/hdd/internet/kiwix" vm_dst="/hdd/internet/kiwix" vm_ro="1" vm_socket="/run/${vm_name}-kiwix.sock" vm_add_virtiofsd
+    id="fs-wiki" vm_src="/hdd/internet/wikipedia" vm_dst="/hdd/internet/wikipedia" vm_ro="1" vm_socket="/run/${vm_name}-wiki.sock" vm_add_virtiofsd
+    id="fs-hermes" vm_src="/ssd/vm/hermes" vm_dst="/ssd/vm/hermes" vm_ro="0" vm_socket="/run/${vm_name}-hermes.sock" vm_add_virtiofsd
+    id="fs-telegraf" vm_src="/ssd/telegraf/hermes" vm_dst="/ssd/telegraf/host" vm_ro="0" vm_socket="/run/${vm_name}-telegraf.sock" vm_add_virtiofsd
     # vm_wait_socket proves only that the pathname became a socket. Consider
     # retaining each helper PID and failing if it exits before/while QEMU starts;
     # cleanup can then kill known PIDs instead of every background shell job.
