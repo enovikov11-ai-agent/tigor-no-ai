@@ -54,3 +54,15 @@ services:
       HERMES_DASHBOARD: "1"
       DOCKER_HOST: "unix:///run/user/1000/podman/podman.sock"
     command: ["gateway", "run"]
+
+  caddy:
+    image: docker.io/library/caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - /root/pages-data/repo:/srv/repo:ro
+      - /root/pages-data/caddy-data:/data
+      - /root/pages-data/caddy-config:/config
+    restart: unless-stopped
