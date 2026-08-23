@@ -6,6 +6,12 @@
 
 See also https://github.com/enovikov11/tigor-ai
 
+| Domain  | Internet     | Virtualization | Cache encrypted | File sharing     |
+| ------- | ------------ | -------------- | --------------- | ---------------- |
+| Public  | Unrestricted | KVM            | No              | Public           |
+| Private | Data diode   | KVM            | No              | Public + Private |
+| Secret  | No           | KVM + SEV-ES   | Yes             | No               |
+
 ## Build
 
 cd /etc/tigor/
@@ -68,6 +74,16 @@ chmod 777 /run/user/1000/podman/podman.sock
 ## TODO
 
 .hermes
+
+Vllm stats on tokens
+Add pub prv sec table, users data move
+Premade sockets
+Ssh on vm unix socket
+Commit scanner with memory and gateway
+Reproducible builds verifyer for other projects
+CA *.tgr
+Libreboot image with disc encryption
+Denominations simulator - cash economy math model game
 
 ### VM runner
 
@@ -132,7 +148,7 @@ jetkvm
 ### Big ideas maybe to do
 
 Move to Xen from KVM
-Buy CMP 170HX
+Buy CMP 170HX cluster
 
 ## Learnings
 
