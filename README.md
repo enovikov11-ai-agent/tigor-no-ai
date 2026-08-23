@@ -77,6 +77,8 @@ dl models
 
 .hermes publish (regularly)
 
+pages.tgr.rs fix/webhook hangs fix
+
 alternative hermes gateways (web, matrix, whatever)
 
 Vllm stats on tokens
