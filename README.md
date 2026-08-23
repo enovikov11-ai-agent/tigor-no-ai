@@ -73,6 +73,8 @@ chmod 777 /run/user/1000/podman/podman.sock
 
 ## TODO
 
+dl models
+
 .hermes publish (regularly)
 
 alternative hermes gateways (web, matrix, whatever)
