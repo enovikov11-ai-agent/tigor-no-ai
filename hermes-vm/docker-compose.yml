@@ -45,8 +45,8 @@ services:
     image: docker.io/nousresearch/hermes-agent
     restart: unless-stopped
     volumes:
-      - /home/nixos/.hermes:/opt/data
-      - /home/nixos:/home/nixos
+      - /home/nixos/hermes-git/tigor-ai/.hermes:/opt/data
+      - /home/nixos/hermes-git:/opt/git
       - /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock
     ports:
       - "9119:9119"
