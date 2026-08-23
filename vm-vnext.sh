@@ -53,15 +53,14 @@ vm_wait_socket() {
 
 vm_add_passt() {
     rm -f "$vm_socket"
-    # Suggested passt boundary:
-    #   root prepares ns-${vm_name}/wg-${vm_name}; then setpriv to a dedicated
-    #   passt UID/GID (no supplementary groups), then enter bwrap.
-    #   bwrap: --unshare-all --share-net --cap-drop ALL --die-with-parent
-    #          --new-session --clearenv + exact RO runtime and socket-dir binds.
-    # --share-net is intentional: passt needs the already-prepared WG netns.
-    # Do not --disable-userns if relying on passt's own nested userns sandbox.
-    # Prefer a private /run/tigor-vm/${vm_name}/passt/ socket directory whose
-    # access is limited to passt and the QEMU identity/group.
+    # bwrap:
+    # ip netns exec "ns-${vm_name}" bwrap \\
+    #     --unshare-all --share-net --cap-drop ALL --die-with-parent \\
+    #     --ro-bind /nix/store /nix/store --dev-bind /dev /dev \\
+    #     --ro-bind /proc /proc \\
+    #     --bind "$(dirname "$vm_socket")" "$(dirname "$vm_socket")" \\
+    #     --ro-bind "$(which passt)" "$(which passt)" \\
+    #     passt \\
 
     ip netns exec "ns-${vm_name}" passt \
         --foreground \
@@ -92,16 +91,14 @@ vm_add_passt() {
 
 vm_add_virtiofsd() {
     rm -f "$vm_socket"
-    # Run virtiofsd as the *real host UID/GID* whose normal DAC/ACL access is
-    # intended to bound the guest. Drop root before bwrap; avoid CAP_DAC_OVERRIDE
-    # and CAP_DAC_READ_SEARCH. A dedicated per-VM/share UID + ACL is tighter.
-    # With bwrap as the outer filesystem/namespace jail, use an exact bind of
-    # vm_src and a private socket directory; for vm_ro make the bwrap bind RO as
-    # well as using virtiofsd --readonly, so the mount itself denies writes.
-    # Consider --inode-file-handles=never to avoid CAP_DAC_READ_SEARCH.
-    # Current virtiofsd supports non-root + --sandbox=none while retaining its
-    # separate seccomp policy. If keeping virtiofsd's namespace sandbox instead,
-    # do not disable nested userns creation and test UID/GID translation.
+    # bwrap:
+    # bwrap --unshare-all --cap-drop ALL --die-with-parent \\
+    #     --ro-bind /nix/store /nix/store \\
+    #     --ro-bind "$vm_src" "$vm_src" \\
+    #     --bind "$(dirname "$vm_socket")" "$(dirname "$vm_socket")" \\
+    #     --ro-bind /proc /proc \\
+    #     --ro-bind "$(which virtiofsd)" "$(which virtiofsd)" \\
+    #     virtiofsd --socket-path="$vm_socket" --shared-dir="$vm_src" --readonly &
 
     if ((vm_ro)); then
         virtiofsd --socket-path="$vm_socket" --shared-dir="$vm_src" --readonly &
@@ -119,17 +116,20 @@ vm_add_virtiofsd() {
 }
 
 vm_run_qemu() {
-    # QEMU should get the strongest profile: dedicated real qemu UID/GID, then
-    # bwrap --unshare-all --unshare-user --unshare-cgroup --disable-userns
-    # --cap-drop ALL --die-with-parent --new-session --clearenv.
-    # Keep bwrap's empty network namespace: QEMU only needs AF_UNIX to passt.
-    # Bind only qcow2, kernel/firmware, helper sockets, runtime closure and exact
-    # device authority. Avoid exposing host /, /sys or broad /dev trees.
-    # Stronger VFIO/iommufd option: privileged launcher pre-opens /dev/iommu and
-    # exact VFIO cdevs, then QEMU uses iommufd fd=N and vfio-pci fd=M. That makes
-    # each inherited FD the device capability instead of pathname access.
-    # 1G hugetlb memfd under unprivileged QEMU may need vm.hugetlb_shm_group;
-    # prefer group membership over retaining CAP_IPC_LOCK.
+    # bwrap:
+    # bwrap --unshare-all --cap-drop ALL --die-with-parent \\
+    #     --ro-bind /nix/store /nix/store \\
+    #     --dev-bind /dev/kvm /dev/kvm \\
+    #     --dev-bind /dev/urandom /dev/urandom \\
+    #     --dev-bind /dev/iommu /dev/iommu \\
+    #     --dev-bind /dev/vfio/vfio /dev/vfio/vfio \\
+    #     --dev-bind /dev/vfio/XX /dev/vfio/XX \\
+    #     --ro-bind "/ssd/vm/${vm_name}.qcow2" "/ssd/vm/${vm_name}.qcow2" \\
+    #     --ro-bind /run/libvirt/nix-ovmf/edk2-x86_64-code.fd /run/libvirt/nix-ovmf/edk2-x86_64-code.fd \\
+    #     --ro-bind /ssd/vm/vm-r37-nvda-pods-vsock-BOOTX64.efi /ssd/vm/vm-r37-nvda-pods-vsock-BOOTX64.efi \\
+    #     --bind /run /run \\
+    #     --ro-bind "$(which qemu-system-x86_64)" "$(which qemu-system-x86_64)" \\
+    #     qemu-system-x86_64 \\
     qemu-system-x86_64 \
         -nodefaults \
         -no-user-config \
