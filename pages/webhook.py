@@ -6,7 +6,8 @@ SECRET = os.environ["WEBHOOK_SECRET"]
 REPO   = os.environ["REPO_URL"]
 PATH   = "/srv/repo"
 
-subprocess.run(["git", "clone", "--depth=1", REPO, PATH], check=True)
+if not os.path.isdir(os.path.join(PATH, ".git")):
+    subprocess.run(["git", "clone", "--depth=1", REPO, PATH], check=True)
 
 class H(BaseHTTPRequestHandler):
     def do_POST(self):
