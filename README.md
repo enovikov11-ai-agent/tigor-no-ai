@@ -73,15 +73,20 @@ chmod 777 /run/user/1000/podman/podman.sock
 
 ## TODO
 
-.hermes
+.hermes publish (regularly)
+
+alternative hermes gateways (web, matrix, whatever)
 
 Vllm stats on tokens
-Add pub prv sec table, users data move
-Premade sockets
+structure data as /{ssd,hdd}/{root,public,private,secret}
+Premade sockets by root
 Ssh on vm unix socket
 Commit scanner with memory and gateway
-Reproducible builds verifyer for other projects
 CA *.tgr
+
+### Non-infra proj ideas
+
+Reproducible builds verifyer for other projects
 Libreboot image with disc encryption
 Denominations simulator - cash economy math model game
 
@@ -124,7 +129,7 @@ reject GPG unverified
 
 Nested vm run
 nosuid img mount
-gpu reset http://10.67.69.2:3000/hermes/tigor/compare/main...gpu-reset
+gpu reset
 
 multiple VMs
 

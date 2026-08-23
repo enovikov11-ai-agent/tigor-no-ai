@@ -1,0 +1,1 @@
+https://github.com/enovikov11/tigor-no-ai/pull/15 hardware reset RTX PRO 6000 GPU before VM passthrough
