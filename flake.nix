@@ -203,6 +203,7 @@
           nvidia ? false,
           containers ? false,
           gnome ? false,
+          cloudInit ? false,
           scalingFactor ? 1,
           firefox ? false,
           vscodium ? false,
@@ -259,6 +260,11 @@
                 time.timeZone = "Europe/Belgrade";
                 i18n.defaultLocale = "en_US.UTF-8";
 
+                services.cloud-init = lib.mkIf cloudInit {
+                  enable = true;
+                  sshInsertKeys = true;
+                };
+
                 nixpkgs.config.allowUnfreePredicate = pkg: lib.hasPrefix "nvidia-" (lib.getName pkg);
                 nix.settings = {
                   experimental-features = [
@@ -301,7 +307,7 @@
 
                 services.openssh = {
                   enable = true;
-                  generateHostKeys = vm;
+                  generateHostKeys = vm || cloudInit;
                   openFirewall = true;
                   settings = {
                     AuthenticationMethods = "publickey";
@@ -628,6 +634,7 @@
           vm = true;
           nvidia = true;
           containers = true;
+          cloudInit = true;
           vsock = true;
           password = "";
         };
