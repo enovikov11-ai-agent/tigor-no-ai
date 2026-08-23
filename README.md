@@ -75,6 +75,8 @@ chmod 777 /run/user/1000/podman/podman.sock
 
 dl models
 
+hermes memory setup (honcho.dev), qdrant, graphify
+
 .hermes publish (regularly)
 
 pages.tgr.rs fix/webhook hangs fix
