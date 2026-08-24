@@ -73,22 +73,23 @@ chmod 777 /run/user/1000/podman/podman.sock
 
 ## TODO
 
-host.containers.internal
+Download models
+vm.sh vnext, Bubblewrap vm.sh, multiple VMs
 
-dl models
+Compare qemu command with libvirt command, and research overall security
+
+data diode
+sec invariants check
+secureboot + tpm
+gpu reset
 
 hermes memory setup (honcho.dev), qdrant, graphify
-
-.hermes publish (regularly)
 
 pages.tgr.rs fix/webhook hangs fix
 
 alternative hermes gateways (web, matrix, whatever)
 
-Vllm stats on tokens
-structure data as /{ssd,hdd}/{root,public,private,secret}
 Premade sockets by root
-Ssh on vm unix socket
 Commit scanner with memory and gateway
 CA *.tgr
 
@@ -100,22 +101,13 @@ Denominations simulator - cash economy math model game
 
 ### VM runner
 
-vm.sh vnext
-
 caddy http / no inet on vllm, forgejo
-
-Bubblewrap vm.sh
-
-Compare qemu command with libvirt command, and research overall security
 
 ### Infra
 
-Download models
 Dflash
 Gpu burn & telegraf
-Pages deployment in my infra
 Control plane via tg/web
-Cloud init: ssh host key, podman compose up -d, network config
 
 ### Data diode & data hoarding /internet
 
@@ -136,14 +128,9 @@ Independent builder
 reject GPG unverified
 
 Nested vm run
-nosuid img mount
-gpu reset
-
-multiple VMs
 
 git scan: license
 git scan: commits summary and digest
-Secureboot
 Nixos config compartmentalization, less privileged code
 Simplify nix on amount of hidden options, shown via full eval
 Better hash algo: mkpasswd -m yescrypt -R 11
