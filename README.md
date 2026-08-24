@@ -21,7 +21,7 @@ diff vm.sh vm.sh.bak
 diff vm.xsl vm.xsl.bak
 
 nix build .#vm
-cp ./result/vm-*-BOOTX64.efi /ssd/vm
+cp ./result/vm-*-BOOTX64.efi /ssd/public/vm/kernels/
 echo -e '\a'
 
 nix build .#host
@@ -82,6 +82,8 @@ data diode
 sec invariants check
 secureboot + tpm
 gpu reset
+
+cloud init ssh host key
 
 hermes memory setup (honcho.dev), qdrant, graphify
 
