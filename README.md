@@ -73,6 +73,8 @@ chmod 777 /run/user/1000/podman/podman.sock
 
 ## TODO
 
+host.containers.internal
+
 dl models
 
 hermes memory setup (honcho.dev), qdrant, graphify

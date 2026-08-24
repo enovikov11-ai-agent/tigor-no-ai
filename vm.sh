@@ -20,7 +20,7 @@ setup_wg() {
 
     ip netns add "ns-${VM_NAME}"
     ip link add "wg-${VM_NAME}" type wireguard
-    wg setconf "wg-${VM_NAME}" "/ssd/vm/hermes/user2.conf"
+    wg setconf "wg-${VM_NAME}" "/ssd/public/vm/hermes/user2.conf"
     ip link set "wg-${VM_NAME}" netns "ns-${VM_NAME}"
 
     ip -n "ns-${VM_NAME}" addr add 10.67.69.2/24 dev "wg-${VM_NAME}"
@@ -70,7 +70,7 @@ start_virtiofsd_0() {
 
     virtiofsd \
         --socket-path="/run/${VM_NAME}-internet.sock" \
-        --shared-dir=/ssd/internet \
+        --shared-dir=/ssd/public/internet \
         --readonly &
 
     wait_socket "/run/${VM_NAME}-internet.sock"
@@ -81,7 +81,7 @@ start_virtiofsd_1() {
 
     virtiofsd \
         --socket-path="/run/${VM_NAME}-data.sock" \
-        --shared-dir=/ssd/vm/hermes/data &
+        --shared-dir=/ssd/public/vm/hermes/data &
 
     wait_socket "/run/${VM_NAME}-data.sock"
 }
@@ -97,7 +97,7 @@ run_qemu() {
         -smp 128 \
         -rtc base=utc \
         -drive if=pflash,format=raw,readonly=on,file=/run/libvirt/nix-ovmf/edk2-x86_64-code.fd \
-        -kernel /ssd/vm/kernels/vm-r37-nvda-pods-vsock-BOOTX64.efi \
+        -kernel /ssd/public/vm/kernels/vm-r37-nvda-pods-vsock-BOOTX64.efi \
         -sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny \
         -object rng-random,id=rng,filename=/dev/urandom \
         -device virtio-rng-pci,rng=rng \
@@ -105,7 +105,7 @@ run_qemu() {
         -device vhost-vsock-pci,guest-cid=3 \
         -serial stdio \
         -monitor none \
-        -drive file="/ssd/vm/hermes/hermes.qcow2",if=virtio,format=qcow2,discard=unmap \
+        -drive file="/ssd/public/vm/hermes/hermes.qcow2",if=virtio,format=qcow2,discard=unmap \
         -object iommufd,id=iommufd0 \
         -device vfio-pci,host=0000:41:00.0,iommufd=iommufd0 \
         -device vfio-pci,host=0000:41:00.1,iommufd=iommufd0 \
@@ -113,9 +113,9 @@ run_qemu() {
         -netdev vhost-user,chardev=net0,id=net \
         -device virtio-net-pci,netdev=net,mac=52:54:00:a9:f5:da,romfile= \
         -chardev socket,id=fs0,path="/run/${VM_NAME}-internet.sock" \
-        -device vhost-user-fs-pci,chardev=fs0,tag=/ssd/internet \
+        -device vhost-user-fs-pci,chardev=fs0,tag=/ssd/public/internet \
         -chardev socket,id=fs1,path="/run/${VM_NAME}-data.sock" \
-        -device vhost-user-fs-pci,chardev=fs1,tag=/ssd/vm/hermes/data
+        -device vhost-user-fs-pci,chardev=fs1,tag=/ssd/public/vm/hermes/data
 }
 
 setup_wg
