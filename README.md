@@ -74,14 +74,12 @@ chmod 777 /run/user/1000/podman/podman.sock
 ## TODO
 
 Download models
-pages.tgr.rs fix/webhook hangs fix
+Caddy http / no inet on vllm, forgejo, pages.ai.tgr.rs
 CA *.tgr
-Caddy http / no inet on vllm, forgejo
 Cloud init ssh host key
-Openrouter glm 5.3 fallback/additional
 Gpu burn & telegraf
-Alternative hermes gateways (web, matrix, whatever)
-Control plane via tg/web
+Gateway: matrix/mattermost
+vm.sh: control plane via tg/web
 vm.sh: make all args
 vm.sh: non-root + premade sockets by root
 vm.sh: test bubblewrap (need nested)
@@ -90,6 +88,7 @@ Data diode
 
 Hermes memory setup (honcho.dev), qdrant, graphify
 
+Secrets scanning
 Sec invariants check
 Secureboot + tpm
 Gpu reset
