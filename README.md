@@ -74,42 +74,34 @@ chmod 777 /run/user/1000/podman/podman.sock
 ## TODO
 
 Download models
-vm.sh vnext, Bubblewrap vm.sh, multiple VMs
-
-Compare qemu command with libvirt command, and research overall security
-
-data diode
-sec invariants check
-secureboot + tpm
-gpu reset
-
-cloud init ssh host key
-
-hermes memory setup (honcho.dev), qdrant, graphify
-
 pages.tgr.rs fix/webhook hangs fix
-
-alternative hermes gateways (web, matrix, whatever)
-
-Premade sockets by root
-Commit scanner with memory and gateway
 CA *.tgr
-
-### Non-infra proj ideas
-
-Reproducible builds verifyer for other projects
-Libreboot image with disc encryption
-Denominations simulator - cash economy math model game
-
-### VM runner
-
-caddy http / no inet on vllm, forgejo
-
-### Infra
-
-Dflash
+Caddy http / no inet on vllm, forgejo
+Openrouter glm 5.3 fallback/additional
 Gpu burn & telegraf
+Alternative hermes gateways (web, matrix, whatever)
 Control plane via tg/web
+vm.sh: make all args
+vm.sh: non-root + premade sockets by root
+vm.sh: test bubblewrap (need nested)
+vm.sh: compare with qemu libvirt command
+Data diode
+
+Hermes memory setup (honcho.dev), qdrant, graphify
+
+Sec invariants check
+Secureboot + tpm
+Gpu reset
+Cloud init ssh host key
+Make a commits scanner with memory and gateway
+Experiment with Dflash
+Independent builder
+Reject GPG unverified
+Git scan: license
+Git scan: commits summary and digest
+Nixos config compartmentalization, less privileged code
+Simplify nix on amount of hidden options, shown via full eval
+Better hash algo: mkpasswd -m yescrypt -R 11
 
 ### Data diode & data hoarding /internet
 
@@ -124,31 +116,14 @@ Git clone
 - VM cannot execute any code at host, cannot read its memory via DMA on GPU
 - VM cannot login to 10.67.69.1
 
-### General security
-
-Independent builder
-reject GPG unverified
-
-Nested vm run
-
-git scan: license
-git scan: commits summary and digest
-Nixos config compartmentalization, less privileged code
-Simplify nix on amount of hidden options, shown via full eval
-Better hash algo: mkpasswd -m yescrypt -R 11
-
-### RTX PRO
+### Misc
 
 Dump rtx pro Nvidia chip dump for backup
 SEV ES & nvidia-smi conf-compute -q
-
-### Misc
-
-openrouter glm 5.3 fallback/additional
-jetkvm
-
-### Big ideas maybe to do
-
+Reproducible builds verifyer for other projects
+Libreboot image with disc encryption
+Denominations simulator - cash economy math model game
+Jetkvm
 Move to Xen from KVM
 Buy CMP 170HX cluster
 
