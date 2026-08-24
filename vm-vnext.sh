@@ -126,7 +126,7 @@ vm_run_qemu() {
     #     --dev-bind /dev/vfio/XX /dev/vfio/XX \\
     #     --ro-bind "/ssd/vm/${vm_name}.qcow2" "/ssd/vm/${vm_name}.qcow2" \\
     #     --ro-bind /run/libvirt/nix-ovmf/edk2-x86_64-code.fd /run/libvirt/nix-ovmf/edk2-x86_64-code.fd \\
-    #     --ro-bind /ssd/vm/vm-r37-nvda-pods-vsock-BOOTX64.efi /ssd/vm/vm-r37-nvda-pods-vsock-BOOTX64.efi \\
+    #     --ro-bind /ssd/vm/vm-r73-nvda-pods-vsock-BOOTX64.efi /ssd/vm/vm-r73-nvda-pods-vsock-BOOTX64.efi \\
     #     --bind /run /run \\
     #     --ro-bind "$(which qemu-system-x86_64)" "$(which qemu-system-x86_64)" \\
     #     qemu-system-x86_64 \\
@@ -140,7 +140,7 @@ vm_run_qemu() {
         -smp 128 \
         -rtc base=utc \
         -drive if=pflash,format=raw,readonly=on,file=/run/libvirt/nix-ovmf/edk2-x86_64-code.fd \
-        -kernel /ssd/vm/vm-r37-nvda-pods-vsock-BOOTX64.efi \
+        -kernel /ssd/vm/vm-r73-nvda-pods-vsock-BOOTX64.efi \
         -sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny \
         -object rng-random,id=rng,filename=/dev/urandom \
         -device virtio-rng-pci,rng=rng \
@@ -164,7 +164,7 @@ vm_start_hermes() {
     # Prefer /run/tigor-vm/${vm_name}/ with separate helper subdirectories and
     # ownership. QEMU only needs search/connect access; helpers should not share
     # one writable socket directory.
-    vm_kernel="/ssd/vm/vm-r37-nvda-pods-vsock-BOOTX64.efi"
+    vm_kernel="/ssd/vm/vm-r73-nvda-pods-vsock-BOOTX64.efi"
     vm_disk="/ssd/vm/hermes.qcow2"
     vm_cpu="128"
     vm_ram="256"
