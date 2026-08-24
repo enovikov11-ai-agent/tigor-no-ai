@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-cd /home/nixos
+cd ~
 git clone https://github.com/enovikov11/tigor-ai.git
 
+cd ./tigor-ai
+git remote remove origin
+git remote add forgejo-push-for-preview http://10.67.69.2:3000/hermes/tigor-ai.git
+git remote add github-pull-and-push-to-main https://github.com/enovikov11/tigor-ai.git
+
+mkdir -p ~/tigor-ai.worktrees
+
 cp -r ~/hermes-secrets/. ~/tigor-ai/.hermes/
-
-
 
 git clone https://github.com/enovikov11/tigor-no-ai.git
 
 mkdir -p tigor-ai.worktrees tigor-no-ai.worktrees
-
-cd tigor-ai
-git remote remove origin
-git remote add forgejo-push-for-preview http://10.67.69.2:3000/hermes/tigor-ai.git
-git remote add github-pull-and-push-to-main https://github.com/enovikov11/tigor-ai.git
 
 cd ../tigor-no-ai
 git remote remove origin
