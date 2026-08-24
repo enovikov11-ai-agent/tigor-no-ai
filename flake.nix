@@ -396,6 +396,11 @@
 
                 systemd.services."serial-getty@ttyS0".enable = lib.mkIf vm true;
 
+                # Allow non-root users to bind to ports <= 1024 (VM services)
+                boot.sysctl = lib.mkIf vm {
+                  "net.ipv4.ip_unprivileged_port_start" = 0;
+                };
+
                 services.udev.extraRules = lib.optionalString (!vm) ''
                   SUBSYSTEM=="misc", KERNEL=="sev", GROUP="kvm", MODE="0660"
                 '';
