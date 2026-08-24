@@ -13,6 +13,10 @@ mkdir -p ~/tigor-ai.worktrees
 
 cp -r ~/hermes-secrets/. ~/tigor-ai/.hermes/
 
+# Symlink ~/.hermes → tigor-ai/.hermes so all Hermes state is git-tracked
+rm -rf ~/.hermes
+ln -s ~/tigor-ai/.hermes ~/.hermes
+
 cd ~
 git clone https://github.com/enovikov11/tigor-no-ai.git
 
@@ -22,8 +26,3 @@ git remote add github-pull https://github.com/enovikov11/tigor-no-ai.git
 git remote add github-push-to-feature-branch https://github.com/enovikov11-ai-agent/tigor-no-ai.git
 
 mkdir -p cd ~/tigor-no-ai.worktrees
-
-# Symlink tigor skills so skill_manage writes persist to git
-mkdir -p ~/.hermes/skills
-rm -rf ~/.hermes/skills/tigor
-ln -s ~/tigor-ai/.hermes/skills/tigor ~/.hermes/skills/tigor
