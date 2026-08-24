@@ -77,6 +77,7 @@ Download models
 pages.tgr.rs fix/webhook hangs fix
 CA *.tgr
 Caddy http / no inet on vllm, forgejo
+Cloud init ssh host key
 Openrouter glm 5.3 fallback/additional
 Gpu burn & telegraf
 Alternative hermes gateways (web, matrix, whatever)
@@ -92,7 +93,6 @@ Hermes memory setup (honcho.dev), qdrant, graphify
 Sec invariants check
 Secureboot + tpm
 Gpu reset
-Cloud init ssh host key
 Make a commits scanner with memory and gateway
 Experiment with Dflash
 Independent builder
