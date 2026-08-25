@@ -81,14 +81,16 @@ hf download ${e} --local-dir /data/${e}
 ## TODO
 
 Download models
-Caddy http / no inet on vllm, forgejo, pages.ai.tgr.rs
-CA *.tgr
 Gpu burn & telegraf
+
+Caddy http / no inet on vllm, forgejo, pages.ai.tgr.rs, vllm.vpn.tgr.rs
 Gateway: matrix/mattermost (element.io X/Web, Synapse)
+
 vm.sh: make all args
 vm.sh: non-root + premade sockets by root
 vm.sh: test bubblewrap (need nested)
 vm.sh: compare with qemu libvirt command
+
 Data diode
 
 Hermes memory setup (honcho.dev), qdrant, graphify
