@@ -301,7 +301,7 @@
 
                 services.openssh = {
                   enable = true;
-                  generateHostKeys = vm;
+                  generateHostKeys = false;
                   openFirewall = true;
                   settings = {
                     AuthenticationMethods = "publickey";
@@ -314,6 +314,15 @@
                       "root"
                       "nixos"
                     ];
+                  };
+                };
+
+                # cloud-init: provision SSH host key from NoCloud seed ISO (vm only)
+                services.cloud-init = lib.mkIf vm {
+                  enable = true;
+                  settings = {
+                    ssh_deletekeys = false;
+                    preserve_hostname = true;
                   };
                 };
 
