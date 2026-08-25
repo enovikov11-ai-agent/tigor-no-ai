@@ -136,11 +136,11 @@ vm_run_qemu() {
         -machine pc-q35-10.2,memory-backend=ram,usb=off,vmport=off,smm=off,dump-guest-core=off \
         -accel kvm \
         -cpu host,migratable=off \
-        -object memory-backend-memfd,id=ram,size=256G,share=on,hugetlb=on,hugetlbsize=1G \
-        -smp 128 \
+        -object memory-backend-memfd,id=ram,size=${vm_ram}G,share=on,hugetlb=on,hugetlbsize=1G \
+        -smp ${vm_cpu} \
         -rtc base=utc \
         -drive if=pflash,format=raw,readonly=on,file=/run/libvirt/nix-ovmf/edk2-x86_64-code.fd \
-        -kernel /ssd/public/vm/kernels/vm-r73-nvda-pods-vsock-BOOTX64.efi \
+        -kernel ${vm_kernel} \
         -sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny \
         -object rng-random,id=rng,filename=/dev/urandom \
         -device virtio-rng-pci,rng=rng \
@@ -148,7 +148,7 @@ vm_run_qemu() {
         -device vhost-vsock-pci,guest-cid=3 \
         -serial stdio \
         -monitor none \
-        -drive file="/ssd/public/vm/hermes/hermes.qcow2",if=virtio,format=qcow2,discard=unmap \
+        -drive file="${vm_disk}",if=virtio,format=qcow2,discard=unmap \
         -object iommufd,id=iommufd0 \
         -device vfio-pci,host=0000:41:00.0,iommufd=iommufd0 \
         -device vfio-pci,host=0000:41:00.1,iommufd=iommufd0 \
@@ -164,15 +164,13 @@ vm_start_hermes() {
     # Prefer /run/tigor-vm/${vm_name}/ with separate helper subdirectories and
     # ownership. QEMU only needs search/connect access; helpers should not share
     # one writable socket directory.
-    vm_kernel="/ssd/vm/vm-r73-nvda-pods-vsock-BOOTX64.efi"
-    vm_disk="/ssd/vm/hermes.qcow2"
+    vm_kernel="/ssd/public/vm/kernels/vm-r73-nvda-pods-vsock-BOOTX64.efi"
+    vm_disk="/ssd/public/vm/hermes/hermes.qcow2"
     vm_cpu="128"
     vm_ram="256"
     vm_gpu="1"
     vm_vsock="1"
     vm_ui="1"
-    # NOTE: vm_kernel/vm_disk/vm_cpu/vm_ram/... above are currently not consumed
-    # by vm_run_qemu, which still hardcodes the corresponding QEMU arguments.
 
     vm_setup_wireguard
     vm_mac="52:54:00:a9:f5:da" vm_socket="/run/${vm_name}-passt.sock" vm_add_passt
