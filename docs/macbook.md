@@ -67,6 +67,9 @@ killall SystemUIServer
 git config --global user.name "Evgenii Novikov"
 git config --global user.email "enovikov11@yandex.ru"
 
+git config --global pull.rebase true
+git config --global rebase.autoStash true
+
 ## sudo touch id
 
 ```
