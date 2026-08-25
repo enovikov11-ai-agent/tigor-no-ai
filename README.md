@@ -80,22 +80,11 @@ hf download ${e} --local-dir /data/${e}
 
 ## TODO
 
-Mullvad + DO
-Stream VM log with tee
-Task api/flow control, 1 message = 1 agent spawn model
-Better network search
-Token count and model used reporting in commits
-Delete obsolete experiments from tigor-ai
-Tigor-vps
-
-firecracker
 Download models
 Caddy http / no inet on vllm, forgejo, pages.ai.tgr.rs
 CA *.tgr
-Cloud init ssh host key
 Gpu burn & telegraf
 Gateway: matrix/mattermost (element.io X/Web, Synapse)
-vm.sh: control plane via tg/web
 vm.sh: make all args
 vm.sh: non-root + premade sockets by root
 vm.sh: test bubblewrap (need nested)
@@ -103,7 +92,6 @@ vm.sh: compare with qemu libvirt command
 Data diode
 
 Hermes memory setup (honcho.dev), qdrant, graphify
-
 Secrets scanning
 Sec invariants check
 Secureboot + tpm
@@ -117,12 +105,21 @@ Git scan: commits summary and digest
 Nixos config compartmentalization, less privileged code
 Simplify nix on amount of hidden options, shown via full eval
 Better hash algo: mkpasswd -m yescrypt -R 11
-
 ai-isolation.md
 lto.md
 hash-fs.md
 anti-overengineering.md
 power-infra.md
+firecracker
+Cloud init ssh host key
+vm.sh: control plane via tg/web
+Mullvad + DO
+Stream VM log with tee
+Task api/flow control, 1 message = 1 agent spawn model
+Better internet search
+Token count and model used reporting in commits
+Delete obsolete experiments from tigor-ai
+Tigor-vps
 
 ### Data diode & data hoarding /internet
 
