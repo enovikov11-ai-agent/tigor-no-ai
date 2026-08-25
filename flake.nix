@@ -507,7 +507,7 @@
                       [[inputs.kernel]]
                       [[inputs.nvidia_smi]]
                       [[outputs.file]]
-                        files = ["/ssd/telegraf/host/metrics.log"]
+                        files = ["/ssd/nixos/telegraf/metrics.log"]
                         rotation_max_archives = 3
                         data_format = "influx"
                     '';
@@ -596,7 +596,7 @@
                   serviceConfig = {
                     Type = "simple";
                     User = "nixos";
-                    Group = "nixos";
+                    Group = "users";
                   };
                   script = ''
                     exec ${pkgs.telegraf}/bin/telegraf --non-strict-env-handling \

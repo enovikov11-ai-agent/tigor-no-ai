@@ -180,7 +180,7 @@ vm_start_hermes() {
     id="fs-ssd-internet" vm_src="/ssd/public/internet" vm_dst="/ssd/public/internet" vm_ro="1" vm_socket="/run/${vm_name}-ssd-internet.sock" vm_add_virtiofsd
     id="fs-hdd-internet" vm_src="/hdd/public/internet" vm_dst="/hdd/public/internet" vm_ro="1" vm_socket="/run/${vm_name}-hdd-internet.sock" vm_add_virtiofsd
     id="fs-hermes" vm_src="/ssd/public/vm/hermes/data" vm_dst="/ssd/public/vm/hermes/data" vm_ro="0" vm_socket="/run/${vm_name}-hermes.sock" vm_add_virtiofsd
-    id="fs-telegraf" vm_src="/ssd/public/vm/hermes/telegraf" vm_dst="/ssd/telegraf/host" vm_ro="0" vm_socket="/run/${vm_name}-telegraf.sock" vm_add_virtiofsd
+    id="fs-telegraf" vm_src="/ssd/public/vm/hermes/telegraf" vm_dst="/ssd/nixos/telegraf" vm_ro="0" vm_socket="/run/${vm_name}-telegraf.sock" vm_add_virtiofsd
 
     # vm_wait_socket proves only that the pathname became a socket. Consider
     # retaining each helper PID and failing if it exits before/while QEMU starts;

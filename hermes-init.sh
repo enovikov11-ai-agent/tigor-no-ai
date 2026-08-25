@@ -22,3 +22,5 @@ git remote add github-pull https://github.com/enovikov11/tigor-no-ai.git
 git remote add github-push-to-feature-branch https://github.com/enovikov11-ai-agent/tigor-no-ai.git
 
 mkdir -p cd ~/tigor-no-ai.worktrees
+
+ln -s ~/tigor-ai/.hermes ~/.hermes
