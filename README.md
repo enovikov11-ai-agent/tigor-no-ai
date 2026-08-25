@@ -87,6 +87,7 @@ Token count and model used reporting in commits
 Delete obsolete experiments from tigor-ai
 Tigor-vps
 
+firecracker
 Download models
 Caddy http / no inet on vllm, forgejo, pages.ai.tgr.rs
 CA *.tgr
