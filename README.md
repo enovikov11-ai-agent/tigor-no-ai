@@ -37,6 +37,7 @@ sync && reboot now
 ## Code
 
 find . -type f -exec sha256sum {} +
+find . -type f -printf '%P\t%s\n'
 
 ssh box
 ssh -J box root@127.0.0.1 -p 2222
