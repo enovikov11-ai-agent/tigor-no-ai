@@ -36,7 +36,7 @@
       </os>
       <features><acpi/><apic/><ioapic driver="kvm"/><smm state="off"/><vmport state="off"/></features>
       <cpu mode="host-passthrough" check="none" migratable="off">
-        <xsl:if test="@nested != 'true'">
+        <xsl:if test="not(@nested = 'true')">
           <feature policy="disable" name="svm"/>
         </xsl:if>
       </cpu>
@@ -102,5 +102,89 @@
     <mount src="/ssd/telegraf/hermes" dst="/ssd/telegraf/host"/>
     <disk src="/ssd/vm/hermes.qcow2" dst="vda"/>
     <net socket="/run/hermes-passt.sock" bus="0x04"/>
+  </vm>
+
+  <!-- test-bare: minimal — boot hd, svm off, no ui/gpu/vsock/mount/net, empty memoryBacking -->
+  <vm xmlns="urn:vm-config" name="test-bare" cpu="2" ram="2">
+    <disk src="/tmp/test-bare.qcow2" dst="vda"/>
+  </vm>
+
+  <!-- test-kernel: kernel boot instead of hd -->
+  <vm xmlns="urn:vm-config" name="test-kernel" cpu="2" ram="2" kernel="/boot/vmlinuz">
+    <disk src="/tmp/test-kernel.qcow2" dst="vda"/>
+  </vm>
+
+  <!-- test-nested: nested='true' — svm NOT disabled -->
+  <vm xmlns="urn:vm-config" name="test-nested" cpu="4" ram="4" nested="true">
+    <disk src="/tmp/test-nested.qcow2" dst="vda"/>
+  </vm>
+
+  <!-- test-ui: SPICE + virtio video + PS2 input -->
+  <vm xmlns="urn:vm-config" name="test-ui" cpu="2" ram="4" ui="true">
+    <disk src="/tmp/test-ui.qcow2" dst="vda"/>
+  </vm>
+
+  <!-- test-gpu: PCI passthrough (0x41/0 + 0x41/1) -->
+  <vm xmlns="urn:vm-config" name="test-gpu" cpu="4" ram="8" gpu="true">
+    <disk src="/tmp/test-gpu.qcow2" dst="vda"/>
+  </vm>
+
+  <!-- test-vsock: vsock device -->
+  <vm xmlns="urn:vm-config" name="test-vsock" cpu="2" ram="4" vsock="true">
+    <disk src="/tmp/test-vsock.qcow2" dst="vda"/>
+  </vm>
+
+  <!-- test-multidisk: multiple disks -->
+  <vm xmlns="urn:vm-config" name="test-multidisk" cpu="2" ram="4">
+    <disk src="/tmp/test-multi-1.qcow2" dst="vda"/>
+    <disk src="/tmp/test-multi-2.qcow2" dst="vdb"/>
+    <disk src="/tmp/test-multi-3.qcow2" dst="vdc"/>
+  </vm>
+
+  <!-- test-multinet: multiple vhost-user nets -->
+  <vm xmlns="urn:vm-config" name="test-multinet" cpu="2" ram="4">
+    <disk src="/tmp/test-multinet.qcow2" dst="vda"/>
+    <net socket="/run/test-net0.sock" bus="0x04"/>
+    <net socket="/run/test-net1.sock" bus="0x05"/>
+  </vm>
+
+  <!-- test-mount-ro: mount with readonly — hits memfd+shared path -->
+  <vm xmlns="urn:vm-config" name="test-mount-ro" cpu="2" ram="4">
+    <mount src="/tmp/ro-data" dst="shared" readonly="true"/>
+    <disk src="/tmp/test-mount-ro.qcow2" dst="vda"/>
+  </vm>
+
+  <!-- test-mount-rw: mount without readonly — memfd+shared -->
+  <vm xmlns="urn:vm-config" name="test-mount-rw" cpu="2" ram="4">
+    <mount src="/tmp/rw-data" dst="shared"/>
+    <disk src="/tmp/test-mount-rw.qcow2" dst="vda"/>
+  </vm>
+
+  <!-- test-mount-mixed: mix of readonly and rw mounts -->
+  <vm xmlns="urn:vm-config" name="test-mount-mixed" cpu="2" ram="4">
+    <mount src="/tmp/ro1" dst="ro1" readonly="true"/>
+    <mount src="/tmp/rw1" dst="rw1"/>
+    <mount src="/tmp/ro2" dst="ro2" readonly="true"/>
+    <disk src="/tmp/test-mount-mixed.qcow2" dst="vda"/>
+  </vm>
+
+  <!-- test-hardened: SEV — locked memoryBacking + launchSecurity -->
+  <vm xmlns="urn:vm-config" name="test-hardened" cpu="2" ram="8" hardened="true" kernel="/boot/vmlinuz">
+    <mount src="/tmp/test-hardened-data" dst="data"/>
+    <disk src="/tmp/test-hardened.qcow2" dst="vda"/>
+  </vm>
+
+  <!-- test-hardened-vsock: SEV + vsock + kernel, no mounts (locked path) -->
+  <vm xmlns="urn:vm-config" name="test-hardened-vsock" cpu="2" ram="8" hardened="true" vsock="true" kernel="/boot/vmlinuz">
+    <disk src="/tmp/test-hardened-vsock.qcow2" dst="vda"/>
+  </vm>
+
+  <!-- test-all: everything except gpu (memfd+shared, all features) -->
+  <vm xmlns="urn:vm-config" name="test-all" cpu="8" ram="16" ui="true" vsock="true" kernel="/boot/vmlinuz">
+    <mount src="/tmp/ro" dst="ro" readonly="true"/>
+    <mount src="/tmp/rw" dst="rw"/>
+    <disk src="/tmp/test-all-1.qcow2" dst="vda"/>
+    <disk src="/tmp/test-all-2.qcow2" dst="vdb"/>
+    <net socket="/run/test-all.sock" bus="0x06"/>
   </vm>
 </xsl:stylesheet>
