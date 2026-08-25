@@ -71,14 +71,28 @@ xsltproc --nonet vm.xsl vm.xsl
 
 chmod 777 /run/user/1000/podman/podman.sock
 
+podman run -it --rm --name hf-downloader -v /hdd/public/internet/huggingface-temp:/data \
+  docker.io/library/python:3.12-slim bash
+pip install -q huggingface_hub
+hf auth login
+hf download ${e} --local-dir /data/${e}
+
 ## TODO
+
+Mullvad + DO
+Stream VM log with tee
+Task api/flow control, 1 message = 1 agent spawn model
+Better network search
+Token count and model used reporting in commits
+Delete obsolete experiments from tigor-ai
+Tigor-vps
 
 Download models
 Caddy http / no inet on vllm, forgejo, pages.ai.tgr.rs
 CA *.tgr
 Cloud init ssh host key
 Gpu burn & telegraf
-Gateway: matrix/mattermost
+Gateway: matrix/mattermost (element.io X/Web, Synapse)
 vm.sh: control plane via tg/web
 vm.sh: make all args
 vm.sh: non-root + premade sockets by root
@@ -101,6 +115,12 @@ Git scan: commits summary and digest
 Nixos config compartmentalization, less privileged code
 Simplify nix on amount of hidden options, shown via full eval
 Better hash algo: mkpasswd -m yescrypt -R 11
+
+ai-isolation.md
+lto.md
+hash-fs.md
+anti-overengineering.md
+power-infra.md
 
 ### Data diode & data hoarding /internet
 
