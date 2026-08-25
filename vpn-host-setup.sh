@@ -105,6 +105,12 @@ cp /etc/ufw/before.rules /etc/ufw/before.rules.orig
 -A POSTROUTING -s 10.67.69.0/24 -o ${WAN_IF} -j MASQUERADE
 COMMIT
 
+*nat
+:PREROUTING ACCEPT [0:0]
+-A PREROUTING -i ${WAN_IF} -p tcp --dport 80 -j DNAT --to-destination 10.67.69.2:80
+-A PREROUTING -i ${WAN_IF} -p tcp --dport 443 -j DNAT --to-destination 10.67.69.2:443
+COMMIT
+
 EOF
     cat /etc/ufw/before.rules.orig
 } >/etc/ufw/before.rules
@@ -116,7 +122,13 @@ ufw default allow outgoing
 ufw default deny routed
 
 ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
 ufw allow 2026/udp
+
+# DNAT: route public HTTP/HTTPS to VM (in ufw before.rules above)
+ufw route allow in on "${WAN_IF}" out on wg0 from any to 10.67.69.2 proto tcp port 80
+ufw route allow in on "${WAN_IF}" out on wg0 from any to 10.67.69.2 proto tcp port 443
 
 ufw allow in on wg0 from 10.67.69.0/24 to 10.67.69.1 proto tcp port 22
 ufw route allow in on wg0 out on wg0 from 10.67.69.0/24 to 10.67.69.2
