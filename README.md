@@ -131,6 +131,24 @@ Telegram proxy
 Nix copy
 Git clone
 
+"https://github.com", "https://gitlab.com",
+"https://codeload.github.com", "https://raw.githubusercontent.com",
+"https://registry.npmjs.org", "https://files.pythonhosted.org",
+"https://pypi.org", "https://cache.nixos.org",
+"https://registry-1.docker.io", "https://ghcr.io", "https://quay.io",
+
+### Better hermes
+
+https://honcho.dev/docs/v3/guides/integrations/hermes
+Хранение сессий, проектов и извлечение релевантного контекста перед ответом
+
+https://github.com/qdrant/qdrant
+Qdrant как векторное хранилище для semantic search / RAG внутри Hermes
+Коллекции, embeddings, индексацию документов и API поиска для инструментов
+
+https://graphify.net
+Graphify как knowledge graph skill, извлечение графа из кода, документов и заметок, а также запросы к графу
+
 ### Invariants to check via tests
 
 - VM cannot send or receieve any packages outside of wg tunnel
