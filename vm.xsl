@@ -20,11 +20,10 @@
       <name><xsl:value-of select="@name"/></name>
       <memory unit="GiB"><xsl:value-of select="@ram"/></memory>
       <memoryBacking>
-        <xsl:if test="@hardened = 'true'"><locked/></xsl:if>
-        <xsl:if test="cfg:mount or cfg:net">
-          <xsl:if test="not(@hardened = 'true')"><source type="memfd"/></xsl:if>
-          <access mode="shared"/>
-        </xsl:if>
+        <xsl:choose>
+            <xsl:when test="@hardened = 'true'"><locked/></xsl:when>
+            <xsl:when test="cfg:mount"><source type="memfd"/><access mode="shared"/></xsl:when>
+        </xsl:choose>
       </memoryBacking>
       <vcpu><xsl:value-of select="@cpu"/></vcpu>
       <os>
@@ -142,8 +141,9 @@
     <disk src="/tmp/test-multi-3.qcow2" dst="vdc"/>
   </vm>
 
-  <!-- test-multinet: multiple vhost-user nets -->
+  <!-- test-multinet: multiple vhost-user nets; mount triggers memfd+shared backing vhostuser needs -->
   <vm xmlns="urn:vm-config" name="test-multinet" cpu="2" ram="4">
+    <mount src="/tmp/multinet-data" dst="data"/>
     <disk src="/tmp/test-multinet.qcow2" dst="vda"/>
     <net socket="/run/test-net0.sock" bus="0x04"/>
     <net socket="/run/test-net1.sock" bus="0x05"/>
@@ -169,9 +169,8 @@
     <disk src="/tmp/test-mount-mixed.qcow2" dst="vda"/>
   </vm>
 
-  <!-- test-hardened: SEV — locked memoryBacking + launchSecurity -->
+  <!-- test-hardened: SEV — locked memoryBacking + launchSecurity; no virtiofs, SEV memory is host-encrypted -->
   <vm xmlns="urn:vm-config" name="test-hardened" cpu="2" ram="8" hardened="true" kernel="/boot/vmlinuz">
-    <mount src="/tmp/test-hardened-data" dst="data"/>
     <disk src="/tmp/test-hardened.qcow2" dst="vda"/>
   </vm>
 
