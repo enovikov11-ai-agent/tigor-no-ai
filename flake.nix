@@ -329,11 +329,13 @@
                     hashedPassword = "!";
                     openssh.authorizedKeys.keys = [ yubiSshKey ];
                   };
-
+                }
+                // lib.optionalAttrs vm {
                   nixos = {
                     uid = 1000;
                     group = "nixos";
                     isNormalUser = true;
+                    home = "/home/nixos";
                     linger = true;
                     hashedPassword = password;
                     extraGroups =
@@ -348,35 +350,37 @@
                       ];
                     openssh.authorizedKeys.keys = authorizedSshKeys;
                   };
-
+                }
+                // lib.optionalAttrs (!vm) {
                   public = {
                     uid = 2000;
                     group = "public";
                     isNormalUser = true;
-                    home = "/home/public";
+                    home = "/ssd/pub";
                   };
 
                   private = {
                     uid = 2001;
                     group = "private";
                     isNormalUser = true;
-                    home = "/home/private";
+                    home = "/ssd/priv";
                   };
 
                   secret = {
                     uid = 2002;
                     group = "secret";
                     isNormalUser = true;
-                    home = "/home/secret";
+                    home = "/ssd/sec";
                   };
                 };
-                users.groups = {
-                  nixos.gid = 1000;
-                  public.gid = 2000;
-                  private.gid = 2001;
-                  secret.gid = 2002;
-                  kvm.members = lib.optionals (!vm) [ "qemu-libvirtd" ];
-                };
+                users.groups =
+                  lib.optionalAttrs vm { nixos.gid = 1000; }
+                  // lib.optionalAttrs (!vm) {
+                    public.gid = 2000;
+                    private.gid = 2001;
+                    secret.gid = 2002;
+                  }
+                  // { kvm.members = lib.optionals (!vm) [ "qemu-libvirtd" ]; };
 
                 boot = {
                   supportedFilesystems = lib.optionals (!vm) [ "zfs" ];
@@ -626,7 +630,7 @@
                   after = [ "network.target" ];
                   serviceConfig = {
                     Type = "simple";
-                    User = "nixos";
+                    User = if vm then "nixos" else "root";
                     Group = "users";
                   };
                   script = ''
