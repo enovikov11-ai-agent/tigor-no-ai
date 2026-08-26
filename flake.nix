@@ -356,21 +356,21 @@
                     uid = 2000;
                     group = "public";
                     isNormalUser = true;
-                    home = "/ssd/pub";
+                    home = "/ssd/public";
                   };
 
                   private = {
                     uid = 2001;
                     group = "private";
                     isNormalUser = true;
-                    home = "/ssd/priv";
+                    home = "/ssd/private";
                   };
 
                   secret = {
                     uid = 2002;
                     group = "secret";
                     isNormalUser = true;
-                    home = "/ssd/sec";
+                    home = "/ssd/secret";
                   };
                 };
                 users.groups =
