@@ -109,6 +109,7 @@ COMMIT
 :PREROUTING ACCEPT [0:0]
 -A PREROUTING -i ${WAN_IF} -p tcp --dport 80 -j DNAT --to-destination 10.67.69.2:1080
 -A PREROUTING -i ${WAN_IF} -p tcp --dport 443 -j DNAT --to-destination 10.67.69.2:1443
+-A PREROUTING -i wg0 -d ${PUBLIC_IP}/32 -p tcp --dport 443 -j DNAT --to-destination 10.67.69.2:2443
 COMMIT
 
 EOF
@@ -128,12 +129,12 @@ ufw allow 2026/udp
 
 
 # DNAT: route public HTTP/HTTPS to VM (in ufw before.rules above): 80->1080, 443->1443
-# From inside (VPN): direct to VM:2443
 ufw route allow in on "${WAN_IF}" out on wg0 from any to 10.67.69.2 proto tcp port 1080
 ufw route allow in on "${WAN_IF}" out on wg0 from any to 10.67.69.2 proto tcp port 1443
 
 ufw allow in on wg0 from 10.67.69.0/24 to 10.67.69.1 proto tcp port 22
-ufw route allow in on wg0 out on wg0 from 10.67.69.0/24 to 10.67.69.2 proto tcp port 2443
+ufw route allow in on wg0 out on wg0 from 10.67.69.0/24 to 10.67.69.2
+ufw route allow in on wg0 out on wg0 from 10.67.69.0/24 to ${PUBLIC_IP}/32 proto tcp port 443
 ufw route allow in on wg0 out on "${WAN_IF}" from 10.67.69.2 to 0.0.0.0/0
 
 ufw --force enable
