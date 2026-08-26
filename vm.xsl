@@ -20,10 +20,11 @@
       <name><xsl:value-of select="@name"/></name>
       <memory unit="GiB"><xsl:value-of select="@ram"/></memory>
       <memoryBacking>
-        <xsl:choose>
-            <xsl:when test="@hardened = 'true'"><locked/></xsl:when>
-            <xsl:when test="cfg:mount"><source type="memfd"/><access mode="shared"/></xsl:when>
-        </xsl:choose>
+        <xsl:if test="@hardened = 'true'"><locked/></xsl:if>
+        <xsl:if test="cfg:mount or cfg:net">
+          <xsl:if test="not(@hardened = 'true')"><source type="memfd"/></xsl:if>
+          <access mode="shared"/>
+        </xsl:if>
       </memoryBacking>
       <vcpu><xsl:value-of select="@cpu"/></vcpu>
       <os>
