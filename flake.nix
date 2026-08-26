@@ -325,11 +325,14 @@
                 users.mutableUsers = false;
                 users.users = {
                   root = {
+                    uid = 0;
                     hashedPassword = "!";
                     openssh.authorizedKeys.keys = [ yubiSshKey ];
                   };
 
                   nixos = {
+                    uid = 1000;
+                    group = "nixos";
                     isNormalUser = true;
                     linger = true;
                     hashedPassword = password;
@@ -345,8 +348,35 @@
                       ];
                     openssh.authorizedKeys.keys = authorizedSshKeys;
                   };
+
+                  public = {
+                    uid = 2000;
+                    group = "public";
+                    isNormalUser = true;
+                    home = "/home/public";
+                  };
+
+                  private = {
+                    uid = 2001;
+                    group = "private";
+                    isNormalUser = true;
+                    home = "/home/private";
+                  };
+
+                  secret = {
+                    uid = 2002;
+                    group = "secret";
+                    isNormalUser = true;
+                    home = "/home/secret";
+                  };
                 };
-                users.groups.kvm.members = lib.optionals (!vm) [ "qemu-libvirtd" ];
+                users.groups = {
+                  nixos.gid = 1000;
+                  public.gid = 2000;
+                  private.gid = 2001;
+                  secret.gid = 2002;
+                  kvm.members = lib.optionals (!vm) [ "qemu-libvirtd" ];
+                };
 
                 boot = {
                   supportedFilesystems = lib.optionals (!vm) [ "zfs" ];
