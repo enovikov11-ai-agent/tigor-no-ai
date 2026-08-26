@@ -565,6 +565,7 @@
                     e2fsprogs
                     libxslt
                     telegraf
+                    ncdu
                   ])
                   ++ lib.optionals vscodium (with pkgs; [ vscodium ])
                   ++ lib.optionals (!vm) (with pkgs; [ zfs ])

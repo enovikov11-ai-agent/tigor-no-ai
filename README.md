@@ -80,20 +80,23 @@ hf download ${e} --local-dir /data/${e}
 
 ## TODO
 
-Download models
-Gpu burn & telegraf
+wait_net Hermes memory setup (honcho.dev), qdrant, graphify
 
-Caddy http / no inet on vllm, forgejo, pages.ai.tgr.rs, vllm.vpn.tgr.rs
-Gateway: matrix/mattermost (element.io X/Web, Synapse)
+in_progress Download models
+wait_restart Gpu burn & telegraf
 
-vm.sh: make all args
+in_review Networking: nonet for vllm/forgejo, caddy for pages.ai.tgr.rs/vllm.vpn.tgr.rs
+wait_net Gateway: matrix, element.io X/Web, Synapse, mattermost
+
 vm.sh: non-root + premade sockets by root
+vm.sh: make all args
 vm.sh: test bubblewrap (need nested)
+
 vm.sh: compare with qemu libvirt command
 
 Data diode
 
-Hermes memory setup (honcho.dev), qdrant, graphify
+Autonomous semi-isolated task api: 1 message/call = agent spawn
 Secrets scanning
 Sec invariants check
 Secureboot + tpm
@@ -117,7 +120,6 @@ Cloud init ssh host key
 vm.sh: control plane via tg/web
 Mullvad + DO
 Stream VM log with tee
-Task api/flow control, 1 message = 1 agent spawn model
 Better internet search
 Token count and model used reporting in commits
 Delete obsolete experiments from tigor-ai
