@@ -94,7 +94,7 @@
     </domain>
   </xsl:template>
 
-  <vm xmlns="urn:vm-config" name="hermes" user="public" cpu="64" ram="128" ui="true" gpu="true" vsock="true" kernel="/ssd/public/vm/kernels/vm-r73-nvda-pods-vsock-pub-BOOTX64.efi">
+  <vm xmlns="urn:vm-config" name="hermes" user="public" cpu="64" ram="128" ui="true" gpu="true" vsock="true" kernel="/ssd/public/vm/kernels/vm-r73-nvda-pods-vsock-public-BOOTX64.efi">
     <mount src="/ssd/public/internet" dst="/ssd/public/internet" readonly="true"/>
     <mount src="/hdd/public/internet/kiwix" dst="/hdd/public/internet/kiwix" readonly="true"/>
     <mount src="/hdd/public/internet/wikipedia" dst="/hdd/public/internet/wikipedia" readonly="true"/>

@@ -220,11 +220,6 @@
             private = 2001;
             secret = 2002;
           };
-          mainUserShort = {
-            public = "pub";
-            private = "priv";
-            secret = "sec";
-          }."${mainUser}";
           telegrafUser = if vm then mainUser else "private";
           telegrafDir = if vm then "/ssd/${mainUser}/telegraf" else "/hdd/private/telegraf";
           vfioPciIds =
@@ -249,7 +244,7 @@
             + lib.optionalString vscodium "-vs"
             + lib.optionalString sudo "-su"
             + lib.optionalString vsock "-vsock"
-            + lib.optionalString vm ("-" + mainUserShort);
+            + lib.optionalString vm ("-" + mainUser);
           ukiName = "${imageName}-BOOTX64";
         in
         lib.nixosSystem {
